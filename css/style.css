@@ -1,1 +1,247 @@
-:root{--bg:#07111f;--panel:#0d1b2e;--text:#f5f7fb;--muted:#a9b6c7;--gold:#f2c14e;--line:#26354a}*{box-sizing:border-box}body{margin:0;font-family:system-ui,sans-serif;background:var(--bg);color:var(--text);line-height:1.6}a{color:inherit;text-decoration:none}.logo{font-size:28px;font-weight:900}.logo span,small,span{color:var(--gold)}header{height:76px;padding:0 4%;display:flex;align-items:center;gap:35px;border-bottom:1px solid var(--line);position:sticky;top:0;background:#07111fee}nav{display:flex;gap:22px;flex-wrap:wrap;font-size:14px}nav a:hover{color:var(--gold)}main{max-width:1180px;margin:auto}.hero{padding:110px 4% 90px}.hero h1{font-size:clamp(48px,7vw,82px);line-height:1;letter-spacing:-3px;max-width:850px}.hero p{font-size:22px;color:var(--muted);margin:25px 0}.button{display:inline-block;background:var(--gold);color:#101722;padding:13px 20px;border-radius:30px;font-weight:800}section{padding:70px 4%}h2{font-size:44px;line-height:1.1}.cards{display:grid;grid-template-columns:repeat(3,1fr);gap:18px}.cards a{background:var(--panel);border:1px solid var(--line);border-radius:20px;padding:28px}.cards b{font-size:21px}.cards p,footer p{color:var(--muted)}footer{border-top:1px solid var(--line);padding:35px 4%;margin-top:40px}@media(max-width:800px){header{height:auto;padding:18px 4%;flex-wrap:wrap}nav{width:100%;gap:14px}.cards{grid-template-columns:1fr}.hero{padding-top:70px}}
+:root {
+  --primary: #0ea5e9;
+  --primary-dark: #0284c7;
+  --bg-dark: #0f172a;
+  --sidebar-bg: #1e293b;
+  --text-main: #334155;
+  --text-muted: #64748b;
+  --bg-light: #f8fafc;
+  --border: #e2e8f0;
+  --font: system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+}
+
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+html {
+  scroll-behavior: smooth;
+}
+
+body {
+  font-family: var(--font);
+  color: var(--text-main);
+  background-color: var(--bg-light);
+  line-height: 1.6;
+}
+
+/* Layout Geral (Sidebar + Conteúdo) */
+.site-layout {
+  display: flex;
+  min-height: 100vh;
+}
+
+/* --- Sidebar --- */
+.sidebar {
+  width: 280px;
+  background-color: var(--sidebar-bg);
+  color: #fff;
+  position: fixed;
+  height: 100vh;
+  overflow-y: auto;
+  padding: 2rem 1.5rem;
+  display: flex;
+  flex-direction: column;
+}
+
+.sidebar-brand h2 {
+  font-size: 1.8rem;
+  color: #fff;
+  letter-spacing: 1px;
+}
+
+.sidebar-brand p {
+  font-size: 0.8rem;
+  color: #94a3b8;
+  margin-top: 0.2rem;
+  margin-bottom: 2rem;
+}
+
+.sidebar-nav {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.sidebar-nav a {
+  color: #cbd5e1;
+  text-decoration: none;
+  font-size: 0.95rem;
+  padding: 0.4rem 0;
+  transition: color 0.2s;
+}
+
+.sidebar-nav a:hover, .sidebar-nav a.active {
+  color: var(--primary);
+}
+
+.nav-category {
+  font-size: 0.75rem;
+  text-transform: uppercase;
+  letter-spacing: 1.2px;
+  color: #64748b;
+  margin-top: 1.2rem;
+  margin-bottom: 0.3rem;
+  font-weight: 700;
+}
+
+/* --- Conteúdo Principal --- */
+.main-content {
+  margin-left: 280px;
+  flex: 1;
+  padding: 3rem 4rem;
+  max-width: 1000px;
+}
+
+.content-header h1 {
+  font-size: 2.5rem;
+  color: var(--bg-dark);
+  margin-bottom: 0.5rem;
+}
+
+.subtitle {
+  font-size: 1.15rem;
+  color: var(--text-muted);
+  margin-bottom: 2rem;
+}
+
+/* Aviso */
+.card-notice {
+  background: #e0f2fe;
+  border-left: 4px solid var(--primary);
+  padding: 1rem 1.2rem;
+  border-radius: 4px;
+  margin-bottom: 2.5rem;
+  font-size: 0.95rem;
+  color: #0369a1;
+}
+
+/* Grelha de Artigos/Tópicos */
+.content-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+  gap: 1.5rem;
+  margin-bottom: 3rem;
+}
+
+.content-card {
+  background: #fff;
+  border: 1px solid var(--border);
+  padding: 1.8rem;
+  border-radius: 8px;
+  transition: transform 0.2s, box-shadow 0.2s;
+}
+
+.content-card:hover {
+  transform: translateY(-3px);
+  box-shadow: 0 10px 15px -3px rgba(0,0,0,0.05);
+}
+
+.content-card h3 {
+  margin-bottom: 0.8rem;
+  color: var(--bg-dark);
+}
+
+.content-card p {
+  color: var(--text-muted);
+  font-size: 0.95rem;
+}
+
+/* Secção de Inscrição */
+.subscribe-section {
+  background: #fff;
+  border: 1px solid var(--border);
+  padding: 2.5rem;
+  border-radius: 8px;
+  text-align: center;
+  margin-bottom: 3rem;
+}
+
+.subscribe-section h2 {
+  margin-bottom: 0.5rem;
+  color: var(--bg-dark);
+}
+
+.subscribe-section p {
+  color: var(--text-muted);
+  margin-bottom: 1.5rem;
+}
+
+.subscribe-box {
+  display: flex;
+  justify-content: center;
+  gap: 0.5rem;
+  max-width: 450px;
+  margin: 0 auto;
+}
+
+.subscribe-box input {
+  flex: 1;
+  padding: 0.75rem;
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  outline: none;
+}
+
+.btn-submit {
+  background-color: var(--primary);
+  color: #fff;
+  border: none;
+  padding: 0 1.2rem;
+  border-radius: 6px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background 0.2s;
+}
+
+.btn-submit:hover {
+  background-color: var(--primary-dark);
+}
+
+/* Rodapé */
+.main-footer {
+  border-top: 1px solid var(--border);
+  padding-top: 1.5rem;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  font-size: 0.85rem;
+  color: var(--text-muted);
+}
+
+.footer-links {
+  display: flex;
+  gap: 1.5rem;
+}
+
+.footer-links a {
+  color: var(--text-muted);
+  text-decoration: none;
+}
+
+.footer-links a:hover {
+  color: var(--primary);
+}
+
+/* Responsividade para Telemóveis */
+@media (max-width: 900px) {
+  .site-layout {
+    flex-direction: column;
+  }
+  .sidebar {
+    position: relative;
+    width: 100%;
+    height: auto;
+  }
+  .main-content {
+    margin-left: 0;
+    padding: 2rem 1.5rem;
+  }
+  .main-footer {
+    flex-direction: column;
+    gap: 1rem;
+    text-align: center;
+  }
+}
