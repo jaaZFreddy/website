@@ -1,634 +1,701 @@
 <!DOCTYPE html>
-<html lang="pt">
+<html lang="pt-PT">
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <link rel="icon" type="image/png" sizes="16x16" href="/images/favicon.png">
-  <title>Simulador Regra 50/30/20 - Orçamento Pessoal</title>
-  <!-- Tailwind CSS via CDN -->
-  <script src="https://cdn.tailwindcss.com"></script>
-  <!-- Inter Font -->
-  <link rel="preconnect" href="https://fonts.googleapis.com">
-  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
-  
-  <script>
-    tailwind.config = {
-      theme: {
-        extend: {
-          fontFamily: {
-            sans: ['Inter', 'sans-serif'],
-          },
-          colors: {
-            brand: {
-              needs: '#3B82F6',       // Azul vibrante
-              wants: '#F59E0B',       // Âmbar / Laranja
-              savings: '#10B981',     // Esmeralda / Verde
-            }
-          }
-        }
-      }
-    }
-  </script>
+  <meta name="description" content="Simulador de Orçamento P1M — Distribui os teus rendimentos entre necessidades, desejos e investimentos.">
+  <title>Simulador de Orçamento — P1M</title>
   <style>
-    /* Transições suaves e suporte para input sem setas feias */
-    input[type=number]::-webkit-inner-spin-button, 
-    input[type=number]::-webkit-outer-spin-button { 
-      -webkit-appearance: none; 
-      margin: 0; 
+    :root {
+      --bg: #07111f;
+      --panel: #0d1b2e;
+      --panel2: #10243b;
+      --text: #f5f7fb;
+      --muted: #a9b6c7;
+      --accent: #f2c14e;
+      --line: rgba(255, 255, 255, 0.10);
+      --max: 1180px;
+      --radius: 22px;
+      
+      /* Cores temáticas das categorias */
+      --c-needs: #38bdf8;       /* Azul ciano para Necessidades */
+      --c-wants: #fb923c;       /* Laranja para Desejos */
+      --c-invest: #f2c14e;      /* Dourado P1M para Investimentos/Poupança */
+      --c-danger: #f87171;
     }
-    input[type=number] {
-      -moz-appearance: textfield;
+
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    html { scroll-behavior: smooth; }
+    body {
+      font-family: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      line-height: 1.6;
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
     }
-    .custom-shadow {
-      box-shadow: 0 20px 45px -15px rgba(15, 23, 42, 0.08), 0 0 1px 1px rgba(15, 23, 42, 0.04);
+
+    a { color: inherit; text-decoration: none; }
+    .container { width: min(var(--max), 92%); margin: auto; }
+
+    /* Header sincronizado com o index */
+    header {
+      position: sticky;
+      top: 0;
+      z-index: 20;
+      background: rgba(7, 17, 31, 0.88);
+      backdrop-filter: blur(14px);
+      border-bottom: 1px solid var(--line);
     }
-    .card-transition {
-      transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+    .nav {
+      height: 76px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+    .logo {
+      font-size: 28px;
+      font-weight: 900;
+      letter-spacing: -1px;
+    }
+    .logo span { color: var(--accent); }
+
+    .btn {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      padding: 11px 20px;
+      border-radius: 999px;
+      font-weight: 800;
+      font-size: 14px;
+      border: 1px solid transparent;
+      cursor: pointer;
+      transition: .2s ease;
+      gap: 8px;
+    }
+    .btn-primary { background: var(--accent); color: #101722; }
+    .btn-primary:hover { transform: translateY(-2px); }
+    .btn-ghost { border-color: var(--line); color: var(--text); background: transparent; }
+    .btn-ghost:hover { border-color: var(--accent); color: var(--accent); }
+
+    /* Área Principal */
+    main { flex: 1; padding: 50px 0 80px; position: relative; }
+    main:before {
+      content: "";
+      position: absolute;
+      width: 520px;
+      height: 520px;
+      border-radius: 50%;
+      background: rgba(242, 193, 78, 0.08);
+      filter: blur(100px);
+      right: -100px;
+      top: 0;
+      pointer-events: none;
+    }
+
+    .eyebrow {
+      color: var(--accent);
+      font-weight: 800;
+      letter-spacing: 2px;
+      text-transform: uppercase;
+      font-size: 12px;
+      margin-bottom: 14px;
+    }
+
+    .page-title {
+      font-size: clamp(34px, 5vw, 56px);
+      line-height: 1.05;
+      letter-spacing: -2px;
+      margin-bottom: 16px;
+    }
+    .page-title span { color: var(--accent); }
+    .subtitle { color: var(--muted); font-size: 18px; max-width: 650px; margin-bottom: 40px; }
+
+    /* Simulador Container */
+    .sim-panel {
+      background: linear-gradient(145deg, var(--panel), #091627);
+      border: 1px solid var(--line);
+      border-radius: var(--radius);
+      padding: clamp(24px, 4vw, 42px);
+      box-shadow: 0 20px 40px rgba(0,0,0,0.4);
+    }
+
+    /* Secção de Input do Salário */
+    .income-section {
+      display: grid;
+      grid-template-columns: 1fr auto;
+      align-items: center;
+      gap: 24px;
+      padding-bottom: 30px;
+      border-bottom: 1px solid var(--line);
+    }
+    @media(max-width: 680px) {
+      .income-section { grid-template-columns: 1fr; }
+    }
+
+    .input-box label {
+      display: block;
+      font-size: 13px;
+      color: var(--muted);
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 1px;
+      margin-bottom: 8px;
+    }
+    .input-wrapper {
+      position: relative;
+      display: flex;
+      align-items: center;
+    }
+    .currency-symbol {
+      position: absolute;
+      left: 18px;
+      font-size: 26px;
+      font-weight: 800;
+      color: var(--accent);
+    }
+    .salary-input {
+      width: 100%;
+      max-width: 380px;
+      background: var(--panel2);
+      border: 1px solid var(--line);
+      border-radius: 16px;
+      padding: 16px 20px 16px 46px;
+      font-size: 28px;
+      font-weight: 900;
+      color: #fff;
+      font-family: inherit;
+      outline: none;
+      transition: .2s;
+    }
+    .salary-input:focus {
+      border-color: var(--accent);
+      box-shadow: 0 0 0 3px rgba(242, 193, 78, 0.2);
+    }
+
+    .switch-group {
+      display: flex;
+      background: var(--panel2);
+      padding: 4px;
+      border-radius: 999px;
+      border: 1px solid var(--line);
+    }
+    .switch-btn {
+      padding: 8px 18px;
+      border-radius: 999px;
+      border: none;
+      background: transparent;
+      color: var(--muted);
+      font-weight: 700;
+      font-size: 13px;
+      cursor: pointer;
+      transition: .2s;
+    }
+    .switch-btn.active {
+      background: var(--accent);
+      color: #101722;
+    }
+
+    /* Estratégias / Presets */
+    .presets-row {
+      margin: 28px 0 16px;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      flex-wrap: wrap;
+    }
+    .presets-title {
+      font-size: 13px;
+      color: var(--muted);
+      font-weight: 700;
+      margin-right: 6px;
+    }
+    .preset-pill {
+      background: var(--panel2);
+      border: 1px solid var(--line);
+      color: #fff;
+      padding: 6px 14px;
+      border-radius: 999px;
+      font-size: 13px;
+      font-weight: 700;
+      cursor: pointer;
+      transition: .2s;
+    }
+    .preset-pill:hover, .preset-pill.active {
+      border-color: var(--accent);
+      color: var(--accent);
+      background: rgba(242, 193, 78, 0.1);
+    }
+
+    /* Barra Visual do Gráfico */
+    .progress-bar-container {
+      margin: 24px 0 34px;
+    }
+    .progress-bar-labels {
+      display: flex;
+      justify-content: space-between;
+      margin-bottom: 10px;
+      font-size: 13px;
+      font-weight: 700;
+    }
+    .progress-bar {
+      height: 18px;
+      width: 100%;
+      background: #08121e;
+      border-radius: 999px;
+      display: flex;
+      overflow: hidden;
+      border: 1px solid var(--line);
+    }
+    .bar-seg {
+      height: 100%;
+      transition: width 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    }
+    .seg-needs { background: var(--c-needs); }
+    .seg-wants { background: var(--c-wants); }
+    .seg-invest { background: var(--c-invest); }
+
+    .total-warning {
+      display: none;
+      align-items: center;
+      justify-content: space-between;
+      margin-top: 10px;
+      padding: 10px 16px;
+      border-radius: 12px;
+      background: rgba(248, 113, 113, 0.12);
+      border: 1px solid rgba(248, 113, 113, 0.3);
+      color: #fca5a5;
+      font-size: 13px;
+    }
+    .total-warning.show { display: flex; }
+    .btn-fix {
+      background: transparent;
+      border: 1px solid #fca5a5;
+      color: #fff;
+      border-radius: 999px;
+      padding: 4px 10px;
+      font-size: 11px;
+      font-weight: 800;
+      cursor: pointer;
+    }
+
+    /* Cartões das Categorias */
+    .cards-grid {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 20px;
+      margin-top: 30px;
+    }
+    @media (max-width: 900px) {
+      .cards-grid { grid-template-columns: 1fr; }
+    }
+
+    .cat-card {
+      background: var(--panel2);
+      border: 1px solid var(--line);
+      border-radius: 18px;
+      padding: 24px;
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
+      position: relative;
+      overflow: hidden;
+    }
+    .cat-card::before {
+      content: "";
+      position: absolute;
+      top: 0;
+      left: 0;
+      right: 0;
+      height: 4px;
+    }
+    .cat-card.card-needs::before { background: var(--c-needs); }
+    .cat-card.card-wants::before { background: var(--c-wants); }
+    .cat-card.card-invest::before { background: var(--c-invest); }
+
+    .card-top {
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-start;
+      margin-bottom: 12px;
+    }
+    .cat-badge {
+      font-size: 11px;
+      font-weight: 900;
+      text-transform: uppercase;
+      letter-spacing: 1px;
+      padding: 4px 8px;
+      border-radius: 6px;
+    }
+    .card-needs .cat-badge { background: rgba(56, 189, 248, 0.15); color: var(--c-needs); }
+    .card-wants .cat-badge { background: rgba(251, 146, 60, 0.15); color: var(--c-wants); }
+    .card-invest .cat-badge { background: rgba(242, 193, 78, 0.15); color: var(--c-invest); }
+
+    .percent-input-wrapper {
+      display: flex;
+      align-items: center;
+      gap: 4px;
+      background: rgba(0,0,0,0.3);
+      padding: 4px 8px;
+      border-radius: 8px;
+      border: 1px solid var(--line);
+    }
+    .percent-input {
+      width: 44px;
+      background: transparent;
+      border: none;
+      color: #fff;
+      font-size: 16px;
+      font-weight: 800;
+      text-align: right;
+      outline: none;
+      font-family: inherit;
+    }
+
+    .cat-title {
+      font-size: 20px;
+      font-weight: 800;
+      margin-bottom: 6px;
+    }
+    .cat-desc {
+      color: var(--muted);
+      font-size: 13px;
+      margin-bottom: 20px;
+      min-height: 40px;
+    }
+
+    .cat-amount {
+      font-size: clamp(26px, 2.5vw, 34px);
+      font-weight: 900;
+      letter-spacing: -1px;
+      margin-bottom: 14px;
+      color: #fff;
+    }
+    .card-invest .cat-amount { color: var(--accent); }
+
+    /* Controlo Slider */
+    .slider-range {
+      -webkit-appearance: none;
+      width: 100%;
+      height: 6px;
+      border-radius: 999px;
+      background: rgba(255, 255, 255, 0.15);
+      outline: none;
+      cursor: pointer;
+    }
+    .slider-range::-webkit-slider-thumb {
+      -webkit-appearance: none;
+      appearance: none;
+      width: 18px;
+      height: 18px;
+      border-radius: 50%;
+      background: #fff;
+      cursor: pointer;
+      box-shadow: 0 0 10px rgba(0,0,0,0.5);
+      transition: .15s;
+    }
+    .slider-range::-webkit-slider-thumb:hover {
+      transform: scale(1.2);
+    }
+    .card-needs .slider-range::-webkit-slider-thumb { background: var(--c-needs); }
+    .card-wants .slider-range::-webkit-slider-thumb { background: var(--c-wants); }
+    .card-invest .slider-range::-webkit-slider-thumb { background: var(--c-invest); }
+
+    /* Footer igual ao index */
+    footer {
+      border-top: 1px solid var(--line);
+      padding: 38px 0;
+      color: var(--muted);
+      font-size: 13px;
+      margin-top: auto;
+    }
+    .footer-row {
+      display: flex;
+      justify-content: space-between;
+      gap: 20px;
+      flex-wrap: wrap;
     }
   </style>
 </head>
-<body class="bg-slate-50 text-slate-800 antialiased min-h-screen flex items-center justify-center p-3 sm:p-6 md:p-8">
+<body>
 
-  <div class="w-full max-w-4xl bg-white rounded-3xl p-5 sm:p-8 custom-shadow border border-slate-100">
-    
-    <!-- Header com Título e Seletor de Período -->
-    <header class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 pb-6 border-b border-slate-100">
-      <div>
-        <div class="inline-flex items-center gap-2 px-3 py-1 bg-blue-50 text-blue-700 text-xs font-semibold rounded-full mb-2">
-          <svg class="w-3.5 h-3.5" fill="currentColor" viewBox="0 0 20 20">
-            <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm1-12a1 1 0 10-2 0v4a1 1 0 00.293.707l2.828 2.829a1 1 0 101.415-1.415L11 9.586V6z" clip-rule="evenodd" />
-          </svg>
-          Planeamento Financeiro
-        </div>
-        <h1 class="text-2xl sm:text-3xl font-extrabold text-slate-900 tracking-tight">Simulador Regra 50/30/20</h1>
-        <p class="text-sm text-slate-500 mt-1">Organize o seu rendimento em necessidades, desejos e investimentos de forma intuitiva.</p>
-      </div>
-
-      <!-- Alternador Mensal / Anual -->
-      <div class="flex items-center bg-slate-100 p-1 rounded-xl self-stretch sm:self-auto justify-center">
-        <button id="btnMonthly" class="px-4 py-1.5 text-xs sm:text-sm font-semibold rounded-lg bg-white text-slate-900 shadow-sm transition-all" onclick="setPeriod('monthly')">
-          Mensal
-        </button>
-        <button id="btnAnnual" class="px-4 py-1.5 text-xs sm:text-sm font-semibold rounded-lg text-slate-600 hover:text-slate-900 transition-all" onclick="setPeriod('annual')">
-          Anual
-        </button>
-      </div>
-    </header>
-
-    <!-- Barra de Atalhos / Presets de Distribuição -->
-    <div class="mt-6 flex flex-wrap items-center justify-between gap-3 p-3.5 bg-slate-50 border border-slate-200/70 rounded-2xl">
-      <div class="flex items-center gap-2">
-        <span class="text-xs font-bold text-slate-600 uppercase tracking-wider">Estratégias Rápidas:</span>
-      </div>
-      <div class="flex flex-wrap items-center gap-1.5">
-        <button onclick="applyPreset(50, 30, 20)" class="preset-btn px-3 py-1 text-xs font-semibold rounded-lg bg-white text-slate-700 border border-slate-200 hover:border-blue-500 hover:text-blue-600 transition-all">
-          50 / 30 / 20 (Clássico)
-        </button>
-        <button onclick="applyPreset(60, 20, 20)" class="preset-btn px-3 py-1 text-xs font-semibold rounded-lg bg-white text-slate-700 border border-slate-200 hover:border-blue-500 hover:text-blue-600 transition-all">
-          60 / 20 / 20 (Realista)
-        </button>
-        <button onclick="applyPreset(70, 20, 10)" class="preset-btn px-3 py-1 text-xs font-semibold rounded-lg bg-white text-slate-700 border border-slate-200 hover:border-blue-500 hover:text-blue-600 transition-all">
-          70 / 20 / 10 (Essencial)
-        </button>
-        <button onclick="applyPreset(50, 15, 35)" class="preset-btn px-3 py-1 text-xs font-semibold rounded-lg bg-white text-slate-700 border border-slate-200 hover:border-blue-500 hover:text-blue-600 transition-all">
-          50 / 15 / 35 (Poupança Forte)
-        </button>
-      </div>
-    </div>
-
-    <section class="mt-6 grid grid-cols-1 md:grid-cols-12 gap-6 items-center">
-      
-      <!-- Entrada de Salário / Rendimento -->
-      <div class="md:col-span-6 space-y-2">
-        <label for="incomeInput" class="block text-sm font-bold text-slate-700">
-          Rendimento Líquido <span id="labelPeriod" class="font-normal text-slate-500">(Mensal)</span>
-        </label>
-        
-        <div class="relative rounded-2xl shadow-sm">
-          <div class="pointer-events-none absolute inset-y-0 left-0 flex items-center pl-4">
-            <span class="text-slate-400 font-bold text-lg">€</span>
-          </div>
-          <input 
-            type="number" 
-            id="incomeInput" 
-            value="1500" 
-            step="50" 
-            min="0"
-            class="block w-full rounded-2xl border border-slate-200 py-3.5 pl-10 pr-12 text-slate-900 font-bold text-xl sm:text-2xl focus:border-blue-500 focus:outline-none focus:ring-4 focus:ring-blue-100 transition-all"
-            placeholder="1500"
-          >
-          <div class="absolute inset-y-0 right-0 flex items-center pr-3">
-            <span class="text-xs font-semibold px-2 py-1 bg-slate-100 text-slate-500 rounded-md">EUR</span>
-          </div>
-        </div>
-
-        <!-- Slider Rápido de Valor -->
-        <div class="pt-2">
-          <input 
-            type="range" 
-            id="incomeSlider" 
-            min="500" 
-            max="10000" 
-            step="50" 
-            value="1500"
-            class="w-full h-2 bg-slate-200 rounded-lg appearance-none cursor-pointer accent-blue-600"
-          >
-          <div class="flex justify-between text-[11px] text-slate-400 font-medium mt-1">
-            <span>€500</span>
-            <span>€5.000</span>
-            <span>€10.000+</span>
-          </div>
-        </div>
-      </div>
-
-      <div class="md:col-span-6 bg-slate-50 p-4 sm:p-5 rounded-2xl border border-slate-100">
-        <div class="flex justify-between items-center text-xs font-semibold mb-2">
-          <span class="text-slate-500">Distribuição Dinâmica</span>
-          <div class="flex items-center gap-2">
-            <span id="badgeTotalPct" class="px-2 py-0.5 rounded-full text-[11px] font-bold bg-emerald-100 text-emerald-700">Total: 100%</span>
-            <span id="displayTotalIncome" class="font-bold text-slate-800">Total: 1.500,00 €</span>
-          </div>
-        </div>
-
-        <!-- Barra de Progresso Dividida Dinâmica -->
-        <div class="h-4 w-full bg-slate-200 rounded-full overflow-hidden flex shadow-inner">
-          <div id="barNeeds" style="width: 50%" class="bg-blue-500 h-full transition-all duration-300 relative group" title="Gastos Essenciais"></div>
-          <div id="barWants" style="width: 30%" class="bg-amber-500 h-full transition-all duration-300 relative group" title="Desejos e Lazer"></div>
-          <div id="barSavings" style="width: 20%" class="bg-emerald-500 h-full transition-all duration-300 relative group" title="Poupança e Investimento"></div>
-        </div>
-
-        <!-- Legenda com percentagens em tempo real -->
-        <div class="grid grid-cols-3 gap-2 mt-3 pt-2 text-center text-xs">
-          <div class="flex items-center justify-center gap-1.5 font-medium text-slate-600">
-            <span class="w-2.5 h-2.5 rounded-full bg-blue-500 shrink-0"></span>
-            <span id="legendNeeds">50% Gastos</span>
-          </div>
-          <div class="flex items-center justify-center gap-1.5 font-medium text-slate-600">
-            <span class="w-2.5 h-2.5 rounded-full bg-amber-500 shrink-0"></span>
-            <span id="legendWants">30% Desejos</span>
-          </div>
-          <div class="flex items-center justify-center gap-1.5 font-medium text-slate-600">
-            <span class="w-2.5 h-2.5 rounded-full bg-emerald-500 shrink-0"></span>
-            <span id="legendSavings">20% Poupança</span>
-          </div>
-        </div>
-
-        <!-- Alerta se o total for diferente de 100% -->
-        <div id="alertWarningTotal" class="hidden mt-3 p-2 bg-amber-50 border border-amber-200 rounded-xl flex items-center justify-between text-xs text-amber-800">
-          <span>⚠️ O total das percentagens não é 100%.</span>
-          <button onclick="balanceTo100()" class="underline font-bold hover:text-amber-950">Ajustar a 100%</button>
-        </div>
-      </div>
-
-    </section>
-
-    <div class="grid grid-cols-1 md:grid-cols-3 gap-5 mt-8">
-      
-      <!-- Card 1: Gastos Essenciais (Customizável) -->
-      <div class="card-transition bg-blue-50/40 hover:bg-blue-50/70 border border-blue-100 rounded-2xl p-5 flex flex-col justify-between">
-        <div>
-          <div class="flex items-center justify-between">
-            <div class="w-10 h-10 rounded-xl bg-blue-500 text-white flex items-center justify-center shadow-md shadow-blue-500/20">
-              <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6"/>
-              </svg>
-            </div>
-            
-            <!-- Controle de Percentagem -->
-            <div class="flex items-center gap-1 bg-white border border-blue-200 px-2 py-1 rounded-xl shadow-xs">
-              <input 
-                type="number" 
-                id="inputPctNeeds" 
-                value="50" 
-                min="0" 
-                max="100" 
-                class="w-10 text-right font-black text-sm text-blue-700 bg-transparent focus:outline-none"
-              >
-              <span class="text-xs font-bold text-blue-600">%</span>
-            </div>
-          </div>
-
-          <h3 class="font-bold text-slate-900 text-lg mt-3">Gastos Essenciais</h3>
-          <p class="text-xs text-slate-500 mt-0.5">Obrigatório para viver e trabalhar.</p>
-
-          <!-- Slider individual da percentagem -->
-          <div class="mt-3">
-            <input 
-              type="range" 
-              id="sliderPctNeeds" 
-              min="0" 
-              max="100" 
-              value="50" 
-              class="w-full h-1.5 bg-blue-200 rounded-lg appearance-none cursor-pointer accent-blue-600"
-            >
-          </div>
-          
-          <div class="mt-4">
-            <span id="amountNeeds" class="text-2xl sm:text-3xl font-extrabold text-blue-700 tracking-tight">750,00 €</span>
-            <span id="subNeeds" class="text-xs text-slate-400 block mt-0.5">mensais recomendados</span>
-          </div>
-        </div>
-
-        <div class="mt-6 pt-4 border-t border-blue-100/80">
-          <p class="text-[11px] font-semibold text-slate-400 uppercase tracking-wider mb-2">Exemplos Práticos</p>
-          <ul class="text-xs space-y-1.5 text-slate-600">
-            <li class="flex items-center gap-1.5">
-              <span class="text-blue-500">•</span> Renda ou Prestação da Casa
-            </li>
-            <li class="flex items-center gap-1.5">
-              <span class="text-blue-500">•</span> Supermercado e Alimentação básica
-            </li>
-            <li class="flex items-center gap-1.5">
-              <span class="text-blue-500">•</span> Água, Luz, Gás e Telecomunicações
-            </li>
-            <li class="flex items-center gap-1.5">
-              <span class="text-blue-500">•</span> Saúde, Seguros e Transportes
-            </li>
-          </ul>
-        </div>
-      </div>
-
-      <!-- Card 2: Desejos & Lazer (Customizável) -->
-      <div class="card-transition bg-amber-50/40 hover:bg-amber-50/70 border border-amber-100 rounded-2xl p-5 flex flex-col justify-between">
-        <div>
-          <div class="flex items-center justify-between">
-            <div class="w-10 h-10 rounded-xl bg-amber-500 text-white flex items-center justify-center shadow-md shadow-amber-500/20">
-              <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14.828 14.828a4 4 0 01-5.656 0M9 10h.01M15 10h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/>
-              </svg>
-            </div>
-
-            <!-- Controle de Percentagem -->
-            <div class="flex items-center gap-1 bg-white border border-amber-200 px-2 py-1 rounded-xl shadow-xs">
-              <input 
-                type="number" 
-                id="inputPctWants" 
-                value="30" 
-                min="0" 
-                max="100" 
-                class="w-10 text-right font-black text-sm text-amber-600 bg-transparent focus:outline-none"
-              >
-              <span class="text-xs font-bold text-amber-600">%</span>
-            </div>
-          </div>
-
-          <h3 class="font-bold text-slate-900 text-lg mt-3">Desejos & Lazer</h3>
-          <p class="text-xs text-slate-500 mt-0.5">Estilo de vida, conforto e entretenimento.</p>
-
-          <!-- Slider individual da percentagem -->
-          <div class="mt-3">
-            <input 
-              type="range" 
-              id="sliderPctWants" 
-              min="0" 
-              max="100" 
-              value="30" 
-              class="w-full h-1.5 bg-amber-200 rounded-lg appearance-none cursor-pointer accent-amber-600"
-            >
-          </div>
-          
-          <div class="mt-4">
-            <span id="amountWants" class="text-2xl sm:text-3xl font-extrabold text-amber-600 tracking-tight">450,00 €</span>
-            <span id="subWants" class="text-xs text-slate-400 block mt-0.5">mensais recomendados</span>
-          </div>
-        </div>
-
-        <div class="mt-6 pt-4 border-t border-amber-100/80">
-          <p class="text-[11px] font-semibold text-slate-400 uppercase tracking-wider mb-2">Exemplos Práticos</p>
-          <ul class="text-xs space-y-1.5 text-slate-600">
-            <li class="flex items-center gap-1.5">
-              <span class="text-amber-500">•</span> Jantares fora e Bares
-            </li>
-            <li class="flex items-center gap-1.5">
-              <span class="text-amber-500">•</span> Férias, Viagens e Escapadinhas
-            </li>
-            <li class="flex items-center gap-1.5">
-              <span class="text-amber-500">•</span> Ginásio, Hobbies e Roupa
-            </li>
-            <li class="flex items-center gap-1.5">
-              <span class="text-amber-500">•</span> Streaming (Netflix, Spotify, etc.)
-            </li>
-          </ul>
-        </div>
-      </div>
-
-      <!-- Card 3: Poupança & Investimento (Customizável) -->
-      <div class="card-transition bg-emerald-50/40 hover:bg-emerald-50/70 border border-emerald-100 rounded-2xl p-5 flex flex-col justify-between">
-        <div>
-          <div class="flex items-center justify-between">
-            <div class="w-10 h-10 rounded-xl bg-emerald-500 text-white flex items-center justify-center shadow-md shadow-emerald-500/20">
-              <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 7h8m0 0v8m0-8l-8 8-4-4-6 6"/>
-              </svg>
-            </div>
-
-            <!-- Controle de Percentagem -->
-            <div class="flex items-center gap-1 bg-white border border-emerald-200 px-2 py-1 rounded-xl shadow-xs">
-              <input 
-                type="number" 
-                id="inputPctSavings" 
-                value="20" 
-                min="0" 
-                max="100" 
-                class="w-10 text-right font-black text-sm text-emerald-600 bg-transparent focus:outline-none"
-              >
-              <span class="text-xs font-bold text-emerald-600">%</span>
-            </div>
-          </div>
-
-          <h3 class="font-bold text-slate-900 text-lg mt-3">Poupança & Investimento</h3>
-          <p class="text-xs text-slate-500 mt-0.5">Construção de património e segurança.</p>
-
-          <!-- Slider individual da percentagem -->
-          <div class="mt-3">
-            <input 
-              type="range" 
-              id="sliderPctSavings" 
-              min="0" 
-              max="100" 
-              value="20" 
-              class="w-full h-1.5 bg-emerald-200 rounded-lg appearance-none cursor-pointer accent-emerald-600"
-            >
-          </div>
-          
-          <div class="mt-4">
-            <span id="amountSavings" class="text-2xl sm:text-3xl font-extrabold text-emerald-600 tracking-tight">300,00 €</span>
-            <span id="subSavings" class="text-xs text-slate-400 block mt-0.5">mensais recomendados</span>
-          </div>
-        </div>
-
-        <div class="mt-6 pt-4 border-t border-emerald-100/80">
-          <p class="text-[11px] font-semibold text-slate-400 uppercase tracking-wider mb-2">Exemplos Práticos</p>
-          <ul class="text-xs space-y-1.5 text-slate-600">
-            <li class="flex items-center gap-1.5">
-              <span class="text-emerald-500">•</span> Fundo de Emergência (6 meses)
-            </li>
-            <li class="flex items-center gap-1.5">
-              <span class="text-emerald-500">•</span> ETFs globais e Ações
-            </li>
-            <li class="flex items-center gap-1.5">
-              <span class="text-emerald-500">•</span> PPR ou Certificados de Aforro
-            </li>
-            <li class="flex items-center gap-1.5">
-              <span class="text-emerald-500">•</span> Amortização antecipada de dívidas
-            </li>
-          </ul>
-        </div>
-      </div>
-
-    </div>
-
-    <footer class="mt-8 pt-5 border-t border-slate-100 flex flex-col sm:flex-row items-center justify-between gap-3 text-xs text-slate-400">
-      <div class="flex items-center gap-1">
-        <span>💡 Regra proposta por Elizabeth Warren em <i>All Your Worth</i>.</span>
-      </div>
-
-      
-    </footer>
-
-    <!-- Notificação Flutuante de Cópia (Sem alert) -->
-    <div id="copyNotification" class="fixed bottom-6 right-6 transform translate-y-12 opacity-0 pointer-events-none transition-all duration-300 bg-slate-900 text-white px-4 py-2.5 rounded-xl shadow-2xl flex items-center gap-2 text-sm z-50">
-      <svg class="w-4 h-4 text-emerald-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" />
+<header>
+  <div class="container nav">
+    <a class="logo" href="../index.html">P<span>1</span>M</a>
+    <!-- Botão de regresso explícito -->
+    <a class="btn btn-ghost" href="../index.html">
+      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+        <line x1="19" y1="12" x2="5" y2="12"></line>
+        <polyline points="12 19 5 12 12 5"></polyline>
       </svg>
-      <span>Código de incorporação copiado com sucesso!</span>
-    </div>
-
+      Voltar à Página Inicial
+    </a>
   </div>
+</header>
 
-  <script>
-    // Estado da aplicação
-    let currentMode = 'monthly'; // 'monthly' | 'annual'
-    let pctNeeds = 50;
-    let pctWants = 30;
-    let pctSavings = 20;
+<main>
+  <div class="container">
+    <div class="eyebrow">Ferramenta Interativa · P1M</div>
+    <h1 class="page-title">Simulador de <span>Orçamento</span></h1>
+    <p class="subtitle">
+      Ajusta as tuas fatias financeiras. Podes usar a clássica regra 50/30/20 ou personalizar livremente as percentagens para refletir o teu plano de vida.
+    </p>
 
-    const incomeInput = document.getElementById('incomeInput');
-    const incomeSlider = document.getElementById('incomeSlider');
+    <div class="sim-panel">
+      <!-- Input do Rendimento e Switch Mensal/Anual -->
+      <div class="income-section">
+        <div class="input-box">
+          <label for="incomeInput">O teu rendimento líquido (Ordenado)</label>
+          <div class="input-wrapper">
+            <span class="currency-symbol">€</span>
+            <input type="number" id="incomeInput" class="salary-input" value="1500" min="0" step="50">
+          </div>
+        </div>
 
-    // Elementos de percentagem
-    const inputPctNeeds = document.getElementById('inputPctNeeds');
-    const sliderPctNeeds = document.getElementById('sliderPctNeeds');
-    const inputPctWants = document.getElementById('inputPctWants');
-    const sliderPctWants = document.getElementById('sliderPctWants');
-    const inputPctSavings = document.getElementById('inputPctSavings');
-    const sliderPctSavings = document.getElementById('sliderPctSavings');
+        <div>
+          <label style="display:block; font-size:12px; color:var(--muted); font-weight:700; margin-bottom:8px; text-transform:uppercase;">Visualização</label>
+          <div class="switch-group">
+            <button class="switch-btn active" id="btnMonthly" onclick="setPeriod('monthly')">Mensal</button>
+            <button class="switch-btn" id="btnYearly" onclick="setPeriod('yearly')">Anual (x12)</button>
+          </div>
+        </div>
+      </div>
 
-    // Barras e legendas
-    const barNeeds = document.getElementById('barNeeds');
-    const barWants = document.getElementById('barWants');
-    const barSavings = document.getElementById('barSavings');
-    const legendNeeds = document.getElementById('legendNeeds');
-    const legendWants = document.getElementById('legendWants');
-    const legendSavings = document.getElementById('legendSavings');
-    const badgeTotalPct = document.getElementById('badgeTotalPct');
-    const alertWarningTotal = document.getElementById('alertWarningTotal');
+      <!-- Presets de Estratégia -->
+      <div class="presets-row">
+        <span class="presets-title">Estratégias rápidas:</span>
+        <button class="preset-pill active" onclick="applyPreset(50, 30, 20, this)">50 / 30 / 20 (Padrão)</button>
+        <button class="preset-pill" onclick="applyPreset(60, 20, 20, this)">60 / 20 / 20 (Custo Elevado)</button>
+        <button class="preset-pill" onclick="applyPreset(70, 20, 10, this)">70 / 20 / 10 (Arranque)</button>
+        <button class="preset-pill" onclick="applyPreset(50, 15, 35, this)">50 / 15 / 35 (Acelerador 1M)</button>
+      </div>
 
-    // Formatador Monetário Português (EUR €)
-    const currencyFormatter = new Intl.NumberFormat('pt-PT', {
+      <!-- Barra de Progresso / Percentagem Visual -->
+      <div class="progress-bar-container">
+        <div class="progress-bar-labels">
+          <span>Distribuição Visual</span>
+          <span id="totalPercentLabel">Total: 100%</span>
+        </div>
+        <div class="progress-bar">
+          <div id="barNeeds" class="bar-seg seg-needs" style="width: 50%;"></div>
+          <div id="barWants" class="bar-seg seg-wants" style="width: 30%;"></div>
+          <div id="barInvest" class="bar-seg seg-invest" style="width: 20%;"></div>
+        </div>
+
+        <div id="totalWarning" class="total-warning">
+          <span>Atenção: A soma das percentagens é <b id="warnTotal">100%</b> (deve totalizar 100%).</span>
+          <button class="btn-fix" onclick="autoAdjustTo100()">Ajustar para 100%</button>
+        </div>
+      </div>
+
+      <!-- Grelha de 3 Cartões Editáveis -->
+      <div class="cards-grid">
+        <!-- Necessidades / Gastos Essenciais -->
+        <div class="cat-card card-needs">
+          <div>
+            <div class="card-top">
+              <span class="cat-badge">Essencial</span>
+              <div class="percent-input-wrapper">
+                <input type="number" id="numNeeds" class="percent-input" value="50" min="0" max="100" oninput="onNumberChange('needs')">
+                <span style="font-weight:800; color:var(--muted); font-size:14px;">%</span>
+              </div>
+            </div>
+            <h3 class="cat-title">Gastos Fixos</h3>
+            <p class="cat-desc">Habitação, alimentação, contas, transportes e saúde.</p>
+          </div>
+          <div>
+            <div class="cat-amount" id="valNeeds">750,00 €</div>
+            <input type="range" id="rangeNeeds" class="slider-range" value="50" min="0" max="100" oninput="onSliderChange('needs')">
+          </div>
+        </div>
+
+        <!-- Desejos / Estilo de Vida -->
+        <div class="cat-card card-wants">
+          <div>
+            <div class="card-top">
+              <span class="cat-badge">Estilo de Vida</span>
+              <div class="percent-input-wrapper">
+                <input type="number" id="numWants" class="percent-input" value="30" min="0" max="100" oninput="onNumberChange('wants')">
+                <span style="font-weight:800; color:var(--muted); font-size:14px;">%</span>
+              </div>
+            </div>
+            <h3 class="cat-title">Desejos</h3>
+            <p class="cat-desc">Jantares fora, viagens, subscrições, lazer e compras pessoais.</p>
+          </div>
+          <div>
+            <div class="cat-amount" id="valWants">450,00 €</div>
+            <input type="range" id="rangeWants" class="slider-range" value="30" min="0" max="100" oninput="onSliderChange('wants')">
+          </div>
+        </div>
+
+        <!-- Poupança / Investimento -->
+        <div class="cat-card card-invest">
+          <div>
+            <div class="card-top">
+              <span class="cat-badge">Construção 1M</span>
+              <div class="percent-input-wrapper">
+                <input type="number" id="numInvest" class="percent-input" value="20" min="0" max="100" oninput="onNumberChange('invest')">
+                <span style="font-weight:800; color:var(--muted); font-size:14px;">%</span>
+              </div>
+            </div>
+            <h3 class="cat-title">Investimento</h3>
+            <p class="cat-desc">Fundo de emergência, ETF, ações, amortizações e o teu futuro.</p>
+          </div>
+          <div>
+            <div class="cat-amount" id="valInvest">300,00 €</div>
+            <input type="range" id="rangeInvest" class="slider-range" value="20" min="0" max="100" oninput="onSliderChange('invest')">
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</main>
+
+<footer>
+  <div class="container">
+    <div class="footer-row">
+      <div><strong>P1M — Programar 1 Milionário</strong><br>Conhecimento. Plano. Ação.</div>
+      <div>© 2026 P1M · Todos os direitos reservados.</div>
+    </div>
+  </div>
+</footer>
+
+<script>
+  let period = 'monthly';
+  let pNeeds = 50;
+  let pWants = 30;
+  let pInvest = 20;
+
+  const incomeInput = document.getElementById('incomeInput');
+  const numNeeds = document.getElementById('numNeeds');
+  const numWants = document.getElementById('numWants');
+  const numInvest = document.getElementById('numInvest');
+
+  const rangeNeeds = document.getElementById('rangeNeeds');
+  const rangeWants = document.getElementById('rangeWants');
+  const rangeInvest = document.getElementById('rangeInvest');
+
+  const barNeeds = document.getElementById('barNeeds');
+  const barWants = document.getElementById('barWants');
+  const barInvest = document.getElementById('barInvest');
+
+  const valNeeds = document.getElementById('valNeeds');
+  const valWants = document.getElementById('valWants');
+  const valInvest = document.getElementById('valInvest');
+
+  const totalPercentLabel = document.getElementById('totalPercentLabel');
+  const totalWarning = document.getElementById('totalWarning');
+  const warnTotal = document.getElementById('warnTotal');
+
+  function formatMoney(amount) {
+    return new Intl.NumberFormat('pt-PT', {
       style: 'currency',
-      currency: 'EUR',
-      minimumFractionDigits: 2,
-      maximumFractionDigits: 2
-    });
+      currency: 'EUR'
+    }).format(amount);
+  }
 
-    // Função Principal de Cálculo e Atualização da UI
-    function calculate() {
-      let baseIncome = parseFloat(incomeInput.value) || 0;
-      if (baseIncome < 0) baseIncome = 0;
+  function setPeriod(type) {
+    period = type;
+    document.getElementById('btnMonthly').classList.toggle('active', type === 'monthly');
+    document.getElementById('btnYearly').classList.toggle('active', type === 'yearly');
+    calculate();
+  }
 
-      // Calcular multiplicador consoante modo
-      const multiplier = (currentMode === 'annual') ? 12 : 1;
-      const effectiveIncome = baseIncome * multiplier;
+  function applyPreset(n, w, i, btnElement) {
+    pNeeds = n;
+    pWants = w;
+    pInvest = i;
+    syncInputs();
+    calculate();
 
-      // Cálculo com base nas percentagens personalizadas
-      const needs = effectiveIncome * (pctNeeds / 100);
-      const wants = effectiveIncome * (pctWants / 100);
-      const savings = effectiveIncome * (pctSavings / 100);
+    document.querySelectorAll('.preset-pill').forEach(el => el.classList.remove('active'));
+    if (btnElement) btnElement.classList.add('active');
+  }
 
-      // Atualizar Valores na Interface
-      document.getElementById('amountNeeds').textContent = currencyFormatter.format(needs);
-      document.getElementById('amountWants').textContent = currencyFormatter.format(wants);
-      document.getElementById('amountSavings').textContent = currencyFormatter.format(savings);
+  function onSliderChange(type) {
+    if (type === 'needs') pNeeds = Number(rangeNeeds.value);
+    if (type === 'wants') pWants = Number(rangeWants.value);
+    if (type === 'invest') pInvest = Number(rangeInvest.value);
+    clearPresetSelection();
+    syncInputs();
+    calculate();
+  }
 
-      // Atualizar Texto de Suporte (Mensais vs Anuais)
-      const periodLabel = currentMode === 'annual' ? 'anuais projetados' : 'mensais recomendados';
-      document.getElementById('subNeeds').textContent = periodLabel;
-      document.getElementById('subWants').textContent = periodLabel;
-      document.getElementById('subSavings').textContent = periodLabel;
+  function onNumberChange(type) {
+    if (type === 'needs') pNeeds = Math.max(0, Math.min(100, Number(numNeeds.value) || 0));
+    if (type === 'wants') pWants = Math.max(0, Math.min(100, Number(numWants.value) || 0));
+    if (type === 'invest') pInvest = Math.max(0, Math.min(100, Number(numInvest.value) || 0));
+    clearPresetSelection();
+    syncInputs();
+    calculate();
+  }
 
-      // Resumo Superior
-      document.getElementById('displayTotalIncome').textContent = `Total: ${currencyFormatter.format(effectiveIncome)}`;
+  function clearPresetSelection() {
+    document.querySelectorAll('.preset-pill').forEach(el => el.classList.remove('active'));
+  }
 
-      // Atualizar barra de progresso e legendas
-      updateDistributionBar();
+  function syncInputs() {
+    numNeeds.value = pNeeds;
+    rangeNeeds.value = pNeeds;
+
+    numWants.value = pWants;
+    rangeWants.value = pWants;
+
+    numInvest.value = pInvest;
+    rangeInvest.value = pInvest;
+  }
+
+  function autoAdjustTo100() {
+    const sum = pNeeds + pWants + pInvest;
+    if (sum === 0) {
+      applyPreset(50, 30, 20, null);
+      return;
     }
+    pNeeds = Math.round((pNeeds / sum) * 100);
+    pWants = Math.round((pWants / sum) * 100);
+    pInvest = 100 - (pNeeds + pWants);
+    syncInputs();
+    calculate();
+  }
 
-    function updateDistributionBar() {
-      const totalPct = pctNeeds + pctWants + pctSavings;
-      
-      // Ajustar largura proporcional se total > 0
-      const sum = totalPct === 0 ? 1 : totalPct;
-      barNeeds.style.width = ((pctNeeds / sum) * 100) + '%';
-      barWants.style.width = ((pctWants / sum) * 100) + '%';
-      barSavings.style.width = ((pctSavings / sum) * 100) + '%';
+  function calculate() {
+    const rawIncome = parseFloat(incomeInput.value) || 0;
+    const income = period === 'yearly' ? rawIncome * 12 : rawIncome;
 
-      // Atualizar legendas
-      legendNeeds.textContent = `${pctNeeds}% Gastos`;
-      legendWants.textContent = `${pctWants}% Desejos`;
-      legendSavings.textContent = `${pctSavings}% Poupança`;
+    const amountNeeds = (income * pNeeds) / 100;
+    const amountWants = (income * pWants) / 100;
+    const amountInvest = (income * pInvest) / 100;
 
-      // Atualizar indicador de total e alerta
-      badgeTotalPct.textContent = `Total: ${totalPct}%`;
-      if (totalPct === 100) {
-        badgeTotalPct.className = 'px-2 py-0.5 rounded-full text-[11px] font-bold bg-emerald-100 text-emerald-700';
-        alertWarningTotal.classList.add('hidden');
-      } else {
-        badgeTotalPct.className = 'px-2 py-0.5 rounded-full text-[11px] font-bold bg-amber-100 text-amber-700';
-        alertWarningTotal.classList.remove('hidden');
-      }
+    valNeeds.textContent = formatMoney(amountNeeds);
+    valWants.textContent = formatMoney(amountWants);
+    valInvest.textContent = formatMoney(amountInvest);
+
+    const total = pNeeds + pWants + pInvest;
+    totalPercentLabel.textContent = `Total: ${total}%`;
+
+    // Ajuste da barra visual proporcionalmente
+    const displaySum = total > 0 ? total : 1;
+    barNeeds.style.width = `${(pNeeds / displaySum) * 100}%`;
+    barWants.style.width = `${(pWants / displaySum) * 100}%`;
+    barInvest.style.width = `${(pInvest / displaySum) * 100}%`;
+
+    // Aviso caso não totalize 100%
+    if (total !== 100) {
+      totalWarning.classList.add('show');
+      warnTotal.textContent = `${total}%`;
+      totalPercentLabel.style.color = 'var(--c-danger)';
+    } else {
+      totalWarning.classList.remove('show');
+      totalPercentLabel.style.color = 'var(--text)';
     }
+  }
 
-    function syncPercentageControls() {
-      inputPctNeeds.value = pctNeeds;
-      sliderPctNeeds.value = pctNeeds;
+  incomeInput.addEventListener('input', calculate);
 
-      inputPctWants.value = pctWants;
-      sliderPctWants.value = pctWants;
-
-      inputPctSavings.value = pctSavings;
-      sliderPctSavings.value = pctSavings;
-    }
-
-    function applyPreset(n, w, s) {
-      pctNeeds = n;
-      pctWants = w;
-      pctSavings = s;
-      syncPercentageControls();
-      calculate();
-    }
-
-    function balanceTo100() {
-      // Ajusta proporcionalmente para somar 100%
-      const total = pctNeeds + pctWants + pctSavings;
-      if (total === 0) {
-        applyPreset(50, 30, 20);
-        return;
-      }
-      pctNeeds = Math.round((pctNeeds / total) * 100);
-      pctWants = Math.round((pctWants / total) * 100);
-      pctSavings = 100 - pctNeeds - pctWants;
-      syncPercentageControls();
-      calculate();
-    }
-
-    // Ouvintes para Gastos Necessários
-    inputPctNeeds.addEventListener('input', (e) => {
-      pctNeeds = Math.max(0, Math.min(100, parseInt(e.target.value) || 0));
-      sliderPctNeeds.value = pctNeeds;
-      calculate();
-    });
-    sliderPctNeeds.addEventListener('input', (e) => {
-      pctNeeds = parseInt(e.target.value) || 0;
-      inputPctNeeds.value = pctNeeds;
-      calculate();
-    });
-
-    // Ouvintes para Desejos
-    inputPctWants.addEventListener('input', (e) => {
-      pctWants = Math.max(0, Math.min(100, parseInt(e.target.value) || 0));
-      sliderPctWants.value = pctWants;
-      calculate();
-    });
-    sliderPctWants.addEventListener('input', (e) => {
-      pctWants = parseInt(e.target.value) || 0;
-      inputPctWants.value = pctWants;
-      calculate();
-    });
-
-    // Ouvintes para Poupança
-    inputPctSavings.addEventListener('input', (e) => {
-      pctSavings = Math.max(0, Math.min(100, parseInt(e.target.value) || 0));
-      sliderPctSavings.value = pctSavings;
-      calculate();
-    });
-    sliderPctSavings.addEventListener('input', (e) => {
-      pctSavings = parseInt(e.target.value) || 0;
-      inputPctSavings.value = pctSavings;
-      calculate();
-    });
-
-    // Alternar entre visão Mensal e Anual
-    function setPeriod(mode) {
-      currentMode = mode;
-      const btnMonthly = document.getElementById('btnMonthly');
-      const btnAnnual = document.getElementById('btnAnnual');
-      const labelPeriod = document.getElementById('labelPeriod');
-
-      if (mode === 'monthly') {
-        btnMonthly.className = 'px-4 py-1.5 text-xs sm:text-sm font-semibold rounded-lg bg-white text-slate-900 shadow-sm transition-all';
-        btnAnnual.className = 'px-4 py-1.5 text-xs sm:text-sm font-semibold rounded-lg text-slate-600 hover:text-slate-900 transition-all';
-        labelPeriod.textContent = '(Mensal)';
-      } else {
-        btnAnnual.className = 'px-4 py-1.5 text-xs sm:text-sm font-semibold rounded-lg bg-white text-slate-900 shadow-sm transition-all';
-        btnMonthly.className = 'px-4 py-1.5 text-xs sm:text-sm font-semibold rounded-lg text-slate-600 hover:text-slate-900 transition-all';
-        labelPeriod.textContent = '(Base Mensal × 12 Meses)';
-      }
-
-      calculate();
-    }
-
-    // Sincronizar input numérico com o Slider de rendimento
-    incomeInput.addEventListener('input', (e) => {
-      const val = parseFloat(e.target.value) || 0;
-      incomeSlider.value = Math.min(Math.max(val, 500), 10000);
-      calculate();
-    });
-
-    incomeSlider.addEventListener('input', (e) => {
-      incomeInput.value = e.target.value;
-      calculate();
-    });
-
-    // Copiar código de incorporação usando fallback execCommand para iFrames
-    function copyEmbedCode() {
-      const iframeSnippet = `<!-- Widget Simulador 50/30/20 -->\n<iframe src="${window.location.href}" width="100%" height="760" style="border:none; border-radius: 16px; overflow:hidden;" title="Simulador Regra de Orçamento"></iframe>`;
-      
-      const tempTextArea = document.createElement("textarea");
-      tempTextArea.value = iframeSnippet;
-      tempTextArea.style.position = "fixed";
-      tempTextArea.style.opacity = "0";
-      document.body.appendChild(tempTextArea);
-      tempTextArea.select();
-      
-      try {
-        document.execCommand('copy');
-        showToast();
-      } catch (err) {
-        console.error('Falha ao copiar:', err);
-      } finally {
-        document.body.removeChild(tempTextArea);
-      }
-    }
-
-    // Exibir notificação sem utilizar alert()
-    function showToast() {
-      const toast = document.getElementById('copyNotification');
-      toast.classList.remove('translate-y-12', 'opacity-0', 'pointer-events-none');
-      toast.classList.add('translate-y-0', 'opacity-100');
-
-      setTimeout(() => {
-        toast.classList.add('translate-y-12', 'opacity-0', 'pointer-events-none');
-        toast.classList.remove('translate-y-0', 'opacity-100');
-      }, 3000);
-    }
-
-    // Inicialização ao carregar
-    window.addEventListener('DOMContentLoaded', () => {
-      syncPercentageControls();
-      calculate();
-    });
-  </script>
+  // Inicialização
+  calculate();
+</script>
 </body>
 </html>
