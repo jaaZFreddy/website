@@ -1,0 +1,1083 @@
+<!DOCTYPE html>
+<html lang="pt-PT">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <link rel="icon" type="image/png" sizes="16x16" href="/images/favicon.png">
+  <meta name="description" content="Suíte de Simuladores P1M — Rumo ao 1 Milhão, Fundo de Emergência, Regra dos 4% FIRE e Custo de Oportunidade.">
+  <title>Simuladores Financeiros — P1M</title>
+  
+  <!-- Inter font -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
+
+  <style>
+    /* Design Tokens P1M */
+    :root {
+      --bg: #07111f;
+      --panel: #0d1b2e;
+      --panel2: #10243b;
+      --panel3: #142e4c;
+      --text: #f5f7fb;
+      --muted: #a9b6c7;
+      --accent: #f2c14e;
+      --accent-glow: rgba(242, 193, 78, 0.18);
+      --line: rgba(255, 255, 255, 0.10);
+      --max: 1200px;
+      --radius: 22px;
+      
+      --color-invested: #38bdf8;
+      --color-interest: #f2c14e;
+      --color-success: #34d399;
+      --color-danger: #f87171;
+    }
+
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    html { scroll-behavior: smooth; }
+    body {
+      font-family: 'Inter', ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      line-height: 1.6;
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+    }
+
+    a { color: inherit; text-decoration: none; }
+    .container { width: min(var(--max), 92%); margin: auto; }
+
+    /* Header Nav */
+    header {
+      position: sticky;
+      top: 0;
+      z-index: 50;
+      background: rgba(7, 17, 31, 0.90);
+      backdrop-filter: blur(14px);
+      border-bottom: 1px solid var(--line);
+    }
+    .nav {
+      height: 76px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+    .logo {
+      font-size: 28px;
+      font-weight: 900;
+      letter-spacing: -1px;
+    }
+    .logo span { color: var(--accent); }
+
+    .btn {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      padding: 10px 20px;
+      border-radius: 999px;
+      font-weight: 800;
+      font-size: 13.5px;
+      border: 1px solid transparent;
+      cursor: pointer;
+      transition: all .2s ease;
+      gap: 8px;
+    }
+    .btn-ghost {
+      border-color: var(--line);
+      color: var(--text);
+      background: transparent;
+    }
+    .btn-ghost:hover {
+      border-color: var(--accent);
+      color: var(--accent);
+      transform: translateY(-1px);
+    }
+    .btn-primary {
+      background: var(--accent);
+      color: #101722;
+    }
+    .btn-primary:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 8px 20px rgba(242, 193, 78, 0.3);
+    }
+
+    /* Main & Ambient Glow */
+    main {
+      flex: 1;
+      padding: 48px 0 80px;
+      position: relative;
+    }
+    main:before {
+      content: "";
+      position: absolute;
+      width: 600px;
+      height: 600px;
+      border-radius: 50%;
+      background: radial-gradient(circle, rgba(242, 193, 78, 0.08) 0%, rgba(7, 17, 31, 0) 70%);
+      top: -100px;
+      right: -100px;
+      pointer-events: none;
+    }
+
+    .eyebrow {
+      color: var(--accent);
+      font-weight: 800;
+      letter-spacing: 2px;
+      text-transform: uppercase;
+      font-size: 12px;
+      margin-bottom: 12px;
+    }
+    .page-title {
+      font-size: clamp(32px, 5vw, 54px);
+      line-height: 1.05;
+      letter-spacing: -2px;
+      margin-bottom: 12px;
+    }
+    .page-title span { color: var(--accent); }
+    .subtitle {
+      color: var(--muted);
+      font-size: 17px;
+      max-width: 680px;
+      margin-bottom: 36px;
+    }
+
+    /* Navigation Tabs */
+    .tabs-wrapper {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 12px;
+      margin-bottom: 28px;
+    }
+    @media (max-width: 990px) {
+      .tabs-wrapper { grid-template-columns: repeat(2, 1fr); }
+    }
+    @media (max-width: 580px) {
+      .tabs-wrapper { grid-template-columns: 1fr; }
+    }
+
+    .tab-trigger {
+      background: linear-gradient(145deg, var(--panel), #081525);
+      border: 1px solid var(--line);
+      border-radius: 16px;
+      padding: 16px 18px;
+      text-align: left;
+      cursor: pointer;
+      transition: all .25s ease;
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+    }
+    .tab-trigger:hover {
+      border-color: rgba(242, 193, 78, 0.4);
+      transform: translateY(-2px);
+    }
+    .tab-trigger.active {
+      border-color: var(--accent);
+      background: linear-gradient(145deg, #11253e, #0c1a2c);
+      box-shadow: 0 8px 24px var(--accent-glow);
+    }
+    .tab-trigger .tab-tag {
+      font-size: 11px;
+      font-weight: 900;
+      letter-spacing: 1px;
+      color: var(--muted);
+      text-transform: uppercase;
+    }
+    .tab-trigger.active .tab-tag { color: var(--accent); }
+    .tab-trigger .tab-name {
+      font-size: 15px;
+      font-weight: 800;
+      color: var(--text);
+    }
+
+    /* Tool Workspace Shell */
+    .simulator-stage {
+      background: linear-gradient(145deg, var(--panel), #091627);
+      border: 1px solid var(--line);
+      border-radius: var(--radius);
+      padding: clamp(24px, 4vw, 42px);
+      box-shadow: 0 24px 48px rgba(0,0,0,0.45);
+      position: relative;
+    }
+
+    .tool-pane {
+      display: none;
+      animation: fadeIn .28s cubic-bezier(0.16, 1, 0.3, 1);
+    }
+    .tool-pane.active { display: block; }
+
+    @keyframes fadeIn {
+      from { opacity: 0; transform: translateY(6px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+
+    /* Input Controls */
+    .control-label {
+      display: flex;
+      justify-content: space-between;
+      font-size: 13px;
+      font-weight: 700;
+      color: var(--muted);
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+      margin-bottom: 8px;
+    }
+    .control-label span:last-child {
+      color: var(--accent);
+      font-size: 13px;
+    }
+    .field-box {
+      position: relative;
+      display: flex;
+      align-items: center;
+      margin-bottom: 12px;
+    }
+    .field-symbol {
+      position: absolute;
+      left: 18px;
+      font-size: 20px;
+      font-weight: 800;
+      color: var(--accent);
+      pointer-events: none;
+    }
+    .field-input {
+      width: 100%;
+      background: var(--panel2);
+      border: 1px solid var(--line);
+      border-radius: 14px;
+      padding: 13px 16px 13px 44px;
+      font-size: 20px;
+      font-weight: 800;
+      color: #fff;
+      font-family: inherit;
+      outline: none;
+      transition: .2s;
+    }
+    .field-input:focus {
+      border-color: var(--accent);
+      box-shadow: 0 0 0 3px rgba(242, 193, 78, 0.15);
+    }
+
+    .range-slider {
+      -webkit-appearance: none;
+      width: 100%;
+      height: 6px;
+      border-radius: 999px;
+      background: rgba(255, 255, 255, 0.12);
+      outline: none;
+      cursor: pointer;
+    }
+    .range-slider::-webkit-slider-thumb {
+      -webkit-appearance: none;
+      width: 18px;
+      height: 18px;
+      border-radius: 50%;
+      background: var(--accent);
+      cursor: pointer;
+      box-shadow: 0 0 10px rgba(242, 193, 78, 0.4);
+      transition: transform .15s ease;
+    }
+    .range-slider::-webkit-slider-thumb:hover { transform: scale(1.2); }
+
+    /* Layout Grids */
+    .tool-grid {
+      display: grid;
+      grid-template-columns: 1.05fr 1.25fr;
+      gap: 36px;
+      align-items: start;
+    }
+    @media (max-width: 960px) {
+      .tool-grid { grid-template-columns: 1fr; }
+    }
+
+    /* Output Panels */
+    .metric-hero {
+      background: linear-gradient(145deg, #0e2035, #081525);
+      border: 1px solid rgba(242, 193, 78, 0.25);
+      border-radius: 18px;
+      padding: 24px;
+      position: relative;
+      margin-bottom: 20px;
+    }
+    .metric-hero .caption {
+      font-size: 12px;
+      font-weight: 800;
+      letter-spacing: 1.5px;
+      text-transform: uppercase;
+      color: var(--muted);
+      margin-bottom: 6px;
+    }
+    .metric-hero .value {
+      font-size: clamp(34px, 4.5vw, 50px);
+      font-weight: 900;
+      letter-spacing: -2px;
+      line-height: 1.05;
+      color: var(--accent);
+    }
+    .metric-hero .sub {
+      color: var(--muted);
+      font-size: 14px;
+      margin-top: 8px;
+    }
+
+    .stat-row {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 16px;
+      margin-bottom: 20px;
+    }
+    .stat-card {
+      background: var(--panel2);
+      border: 1px solid var(--line);
+      border-radius: 16px;
+      padding: 16px 18px;
+    }
+    .stat-card .lbl {
+      font-size: 12px;
+      color: var(--muted);
+      font-weight: 700;
+    }
+    .stat-card .val {
+      font-size: 20px;
+      font-weight: 800;
+      color: #fff;
+      margin-top: 4px;
+    }
+
+    /* Custom visual graph for compound interest */
+    .chart-box {
+      background: var(--panel2);
+      border: 1px solid var(--line);
+      border-radius: 16px;
+      padding: 20px;
+    }
+    .chart-bars {
+      display: flex;
+      align-items: flex-end;
+      height: 160px;
+      gap: 12px;
+      padding-top: 20px;
+      border-bottom: 1px solid var(--line);
+    }
+    .chart-col {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      justify-content: flex-end;
+      align-items: center;
+      height: 100%;
+      position: relative;
+    }
+    .bar-stack {
+      width: 100%;
+      border-radius: 8px 8px 0 0;
+      overflow: hidden;
+      display: flex;
+      flex-direction: column-reverse;
+      transition: height .4s ease;
+    }
+    .bar-part-invested { background: var(--color-invested); }
+    .bar-part-interest { background: var(--accent); }
+    .chart-year-label {
+      font-size: 11px;
+      color: var(--muted);
+      font-weight: 700;
+      margin-top: 8px;
+    }
+
+    .legend-row {
+      display: flex;
+      justify-content: center;
+      gap: 24px;
+      margin-top: 14px;
+      font-size: 12px;
+      font-weight: 700;
+    }
+    .legend-item { display: flex; align-items: center; gap: 8px; }
+    .legend-dot { width: 10px; height: 10px; border-radius: 3px; }
+
+    /* Pill Buttons for Selection */
+    .pill-select {
+      display: flex;
+      gap: 8px;
+      flex-wrap: wrap;
+      margin-bottom: 16px;
+    }
+    .pill-btn {
+      background: var(--panel2);
+      border: 1px solid var(--line);
+      color: var(--muted);
+      padding: 8px 16px;
+      border-radius: 999px;
+      font-size: 13px;
+      font-weight: 700;
+      cursor: pointer;
+      transition: .2s;
+    }
+    .pill-btn:hover { border-color: var(--accent); color: #fff; }
+    .pill-btn.active {
+      background: var(--accent);
+      color: #101722;
+      border-color: var(--accent);
+    }
+
+    /* Small Habits Table */
+    .habits-grid {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 12px;
+      margin-top: 16px;
+    }
+    @media(max-width: 600px) {
+      .habits-grid { grid-template-columns: 1fr; }
+    }
+    .habit-card {
+      background: var(--panel2);
+      border: 1px solid var(--line);
+      border-radius: 14px;
+      padding: 16px;
+      text-align: center;
+    }
+    .habit-card .timeframe {
+      font-size: 11px;
+      color: var(--accent);
+      font-weight: 800;
+      text-transform: uppercase;
+      letter-spacing: 1px;
+    }
+    .habit-card .worth {
+      font-size: 22px;
+      font-weight: 900;
+      color: #fff;
+      margin: 6px 0 2px;
+    }
+    .habit-card .delta {
+      font-size: 11px;
+      color: var(--muted);
+    }
+
+    /* Footer styling */
+    footer {
+      border-top: 1px solid var(--line);
+      padding: 38px 0;
+      color: var(--muted);
+      font-size: 13px;
+      margin-top: auto;
+    }
+    .footer-row {
+      display: flex;
+      justify-content: space-between;
+      gap: 20px;
+      flex-wrap: wrap;
+    }
+    .footer-disclaimer {
+      margin-top: 16px;
+      font-size: 12px;
+      line-height: 1.5;
+      color: rgba(169, 182, 199, 0.7);
+    }
+  </style>
+</head>
+<body>
+
+<header>
+  <div class="container nav">
+    <a class="logo" href="../index.html">P<span>1</span>M</a>
+    <a class="btn btn-ghost" href="../index.html">
+      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+        <line x1="19" y1="12" x2="5" y2="12"></line>
+        <polyline points="12 19 5 12 12 5"></polyline>
+      </svg>
+      Voltar à Página Inicial
+    </a>
+  </div>
+</header>
+
+<main>
+  <div class="container">
+    <div class="eyebrow">Ferramentas Práticas · P1M</div>
+    <h1 class="page-title">Arsenal Financeiro <span>P1M</span></h1>
+    <p class="subtitle">
+      Do primeiro fundo de proteção até à liberdade financeira. Quatro ferramentas estratégicas para calcular, projetar e acelerar a tua jornada.
+    </p>
+
+    <!-- Selector de Abas -->
+    <div class="tabs-wrapper">
+      <button class="tab-trigger active" onclick="switchTool('milhao')">
+        <span class="tab-tag">01 · Aceleração</span>
+        <span class="tab-name">Rumo ao 1 Milhão</span>
+      </button>
+      <button class="tab-trigger" onclick="switchTool('emergencia')">
+        <span class="tab-tag">02 · Proteção</span>
+        <span class="tab-name">Fundo de Emergência</span>
+      </button>
+      <button class="tab-trigger" onclick="switchTool('fire')">
+        <span class="tab-tag">03 · Liberdade</span>
+        <span class="tab-name">Regra dos 4% (FIRE)</span>
+      </button>
+      <button class="tab-trigger" onclick="switchTool('habitos')">
+        <span class="tab-tag">04 · Consciência</span>
+        <span class="tab-name">Custo dos Pequenos Hábitos</span>
+      </button>
+    </div>
+
+    <div class="simulator-stage">
+      
+      <section id="tool-milhao" class="tool-pane active">
+        <div class="tool-grid">
+          <div>
+            <h2 style="font-size: 22px; font-weight:800; margin-bottom: 6px;">Caminho até ao 1 Milhão €</h2>
+            <p style="color:var(--muted); font-size:13.5px; margin-bottom: 24px;">Descobre o poder dos juros compostos e o tempo exato necessário para atingir o teu primeiro milhão.</p>
+            
+            <div class="control-label">
+              <span>Capital Inicial</span>
+              <span id="txt-m-initial">€ 5.000</span>
+            </div>
+            <div class="field-box">
+              <span class="field-symbol">€</span>
+              <input type="number" id="m-initial" class="field-input" value="5000" min="0" step="500" oninput="calcMilhao()">
+            </div>
+            <input type="range" id="m-initial-range" class="range-slider" min="0" max="100000" step="1000" value="5000" oninput="syncRange('m-initial', this.value); calcMilhao();">
+
+            <div class="control-label" style="margin-top: 20px;">
+              <span>Reforço Mensal</span>
+              <span id="txt-m-monthly">€ 500</span>
+            </div>
+            <div class="field-box">
+              <span class="field-symbol">€</span>
+              <input type="number" id="m-monthly" class="field-input" value="500" min="50" step="50" oninput="calcMilhao()">
+            </div>
+            <input type="range" id="m-monthly-range" class="range-slider" min="50" max="5000" step="50" value="500" oninput="syncRange('m-monthly', this.value); calcMilhao();">
+
+            <div class="control-label" style="margin-top: 20px;">
+              <span>Rentabilidade Anual Média (%)</span>
+              <span id="txt-m-rate">8.0%</span>
+            </div>
+            <div class="field-box">
+              <span class="field-symbol">%</span>
+              <input type="number" id="m-rate" class="field-input" value="8" min="1" max="20" step="0.5" oninput="calcMilhao()">
+            </div>
+            <input type="range" id="m-rate-range" class="range-slider" min="2" max="15" step="0.5" value="8" oninput="syncRange('m-rate', this.value); calcMilhao();">
+          </div>
+
+          <div>
+            <div class="metric-hero">
+              <div class="caption">Tempo Estimado para 1.000.000 €</div>
+              <div class="value" id="m-res-time">28 Anos</div>
+              <div class="sub" id="m-res-date">Projeção estimada de alcance até 2054</div>
+            </div>
+
+            <div class="stat-row">
+              <div class="stat-card">
+                <div class="lbl">Capital Investido do Teu Bolso</div>
+                <div class="val" id="m-res-invested">€ 173.000</div>
+              </div>
+              <div class="stat-card">
+                <div class="lbl">Juros Compostos Gerados</div>
+                <div class="val" id="m-res-interest" style="color:var(--accent);">€ 827.000</div>
+              </div>
+            </div>
+
+            <div class="chart-box">
+              <div style="font-size:12px; font-weight:700; color:var(--muted); text-transform:uppercase;">Evolução Patrimonial</div>
+              <div class="chart-bars" id="m-chart-bars">
+                <!-- Barras injetadas via JS -->
+              </div>
+              <div class="legend-row">
+                <div class="legend-item"><span class="legend-dot" style="background:var(--color-invested);"></span> Dinheiro Investido</div>
+                <div class="legend-item"><span class="legend-dot" style="background:var(--accent);"></span> Juros Compostos</div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <section id="tool-emergencia" class="tool-pane">
+        <div class="tool-grid">
+          <div>
+            <h2 style="font-size: 22px; font-weight:800; margin-bottom: 6px;">Fundo de Emergência & Proteção</h2>
+            <p style="color:var(--muted); font-size:13.5px; margin-bottom: 24px;">Antes de investir forte, a base precisa de estar sólida. Calcula a tua almofada financeira anti-pânico.</p>
+
+            <div class="control-label">
+              <span>Gastos Essenciais Mensais</span>
+              <span id="txt-e-expenses">€ 1.200</span>
+            </div>
+            <div class="field-box">
+              <span class="field-symbol">€</span>
+              <input type="number" id="e-expenses" class="field-input" value="1200" min="200" step="50" oninput="calcEmergencia()">
+            </div>
+
+            <div class="control-label" style="margin-top: 18px;">
+              <span>Meses de Proteção Recomendados</span>
+            </div>
+            <div class="pill-select">
+              <button class="pill-btn" onclick="setEmergencyMonths(3, this)">3 Meses (Estável)</button>
+              <button class="pill-btn active" onclick="setEmergencyMonths(6, this)">6 Meses (Padrão P1M)</button>
+              <button class="pill-btn" onclick="setEmergencyMonths(9, this)">9 Meses</button>
+              <button class="pill-btn" onclick="setEmergencyMonths(12, this)">12 Meses (Autónomo/Risco)</button>
+            </div>
+
+            <div class="control-label" style="margin-top: 18px;">
+              <span>Valor que já tens Guardado</span>
+              <span id="txt-e-saved">€ 2.500</span>
+            </div>
+            <div class="field-box">
+              <span class="field-symbol">€</span>
+              <input type="number" id="e-saved" class="field-input" value="2500" min="0" step="100" oninput="calcEmergencia()">
+            </div>
+
+            <div class="control-label" style="margin-top: 18px;">
+              <span>Poupança Mensal Dedicada</span>
+              <span id="txt-e-saving-monthly">€ 350</span>
+            </div>
+            <div class="field-box">
+              <span class="field-symbol">€</span>
+              <input type="number" id="e-saving-monthly" class="field-input" value="350" min="50" step="25" oninput="calcEmergencia()">
+            </div>
+          </div>
+
+          <div>
+            <div class="metric-hero">
+              <div class="caption">Meta do Fundo de Emergência</div>
+              <div class="value" id="e-res-target">€ 7.200</div>
+              <div class="sub" id="e-res-months-left">Faltam 14 meses para completar a tua proteção</div>
+            </div>
+
+            <div class="stat-row">
+              <div class="stat-card">
+                <div class="lbl">Progresso Atual</div>
+                <div class="val" id="e-res-pct">34.7%</div>
+              </div>
+              <div class="stat-card">
+                <div class="lbl">Faltam Guardar</div>
+                <div class="val" id="e-res-missing" style="color:var(--accent);">€ 4.700</div>
+              </div>
+            </div>
+
+            <div class="chart-box">
+              <div class="control-label" style="margin-bottom: 10px;">
+                <span>Progresso da Almofada</span>
+                <span id="e-bar-pct">35%</span>
+              </div>
+              <div style="height: 20px; background:#081423; border-radius:999px; overflow:hidden; border:1px solid var(--line); position:relative;">
+                <div id="e-progress-bar" style="height:100%; width:35%; background: linear-gradient(90deg, #38bdf8, var(--accent)); transition: width .4s ease;"></div>
+              </div>
+              <p style="font-size: 13px; color:var(--muted); margin-top: 16px; line-height: 1.5;">
+                💡 <b>Onde colocar este dinheiro?</b> Produtos com capital garantido e resgate imediato (ex.: Certificados de Aforro ou Contas Remuneradas). O fundo não serve para enriquecer, serve para não vender investimentos em quedas.
+              </p>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <section id="tool-fire" class="tool-pane">
+        <div class="tool-grid">
+          <div>
+            <h2 style="font-size: 22px; font-weight:800; margin-bottom: 6px;">Calculadora FIRE (Regra dos 4%)</h2>
+            <p style="color:var(--muted); font-size:13.5px; margin-bottom: 24px;">Qual é o número exato de património líquido investido para que o trabalho se torne opcional?</p>
+
+            <div class="control-label">
+              <span>Despesa Desejada na Liberdade</span>
+              <span id="txt-f-mode">Mensal</span>
+            </div>
+            <div class="field-box">
+              <span class="field-symbol">€</span>
+              <input type="number" id="f-expense" class="field-input" value="2000" min="500" step="100" oninput="calcFIRE()">
+            </div>
+
+            <div class="pill-select">
+              <button class="pill-btn active" id="f-btn-m" onclick="setFirePeriod('m')">Valor Mensal (€2.000/mês)</button>
+              <button class="pill-btn" id="f-btn-y" onclick="setFirePeriod('y')">Valor Anual (€24.000/ano)</button>
+            </div>
+
+            <div class="control-label" style="margin-top: 18px;">
+              <span>Taxa Segura de Levantamento (SWR)</span>
+              <span id="txt-f-swr">4.0%</span>
+            </div>
+            <div class="field-box">
+              <span class="field-symbol">%</span>
+              <input type="number" id="f-swr" class="field-input" value="4.0" min="2.5" max="5.0" step="0.1" oninput="calcFIRE()">
+            </div>
+            <div class="pill-select">
+              <button class="pill-btn active" onclick="setSWR(4.0, this)">4.0% (Trindade - Clássico)</button>
+              <button class="pill-btn" onclick="setSWR(3.5, this)">3.5% (Ultra-Conservador)</button>
+              <button class="pill-btn" onclick="setSWR(3.0, this)">3.0% (Reforma Muito Cedo)</button>
+            </div>
+          </div>
+
+          <div>
+            <div class="metric-hero">
+              <div class="caption">Património Necessário (Número FIRE)</div>
+              <div class="value" id="f-res-target">€ 600.000</div>
+              <div class="sub" id="f-res-sub">Gera € 2.000 líquidos por mês sem consumir o capital principal</div>
+            </div>
+
+            <div class="stat-row">
+              <div class="stat-card">
+                <div class="lbl">Despesas Anuais Cobertas</div>
+                <div class="val" id="f-res-annual">€ 24.000 / ano</div>
+              </div>
+              <div class="stat-card">
+                <div class="lbl">Multiplicador FIRE</div>
+                <div class="val" id="f-res-mult" style="color:var(--accent);">25x Despesas</div>
+              </div>
+            </div>
+
+            <div class="chart-box">
+              <div style="font-size:13px; font-weight:800; color:#fff; margin-bottom: 8px;">Como funciona a Regra dos 4%?</div>
+              <p style="font-size: 13px; color:var(--muted); line-height: 1.55;">
+                Com base no consagrado <i>Trinity Study</i>, uma carteira global diversificada (Ações + Obrigações) permite retirar 4% ao ano corrigidos pela inflação mantendo uma probabilidade de sucesso superior a 95% ao longo de décadas.
+              </p>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <section id="tool-habitos" class="tool-pane">
+        <div class="tool-grid">
+          <div>
+            <h2 style="font-size: 22px; font-weight:800; margin-bottom: 6px;">O Efeito Bola de Neve dos Pequenos Gastos</h2>
+            <p style="color:var(--muted); font-size:13.5px; margin-bottom: 24px;">Pequenos vazamentos furam grandes navios. Quanto valeria aquele gasto dispensável se trabalhasse para ti a 8% ao ano?</p>
+
+            <div class="control-label">
+              <span>Gasto Repetitivo</span>
+            </div>
+            <div class="pill-select">
+              <button class="pill-btn active" onclick="setHabitPreset('Café & Snack diário', 2.5, 'dia', this)">☕ Café Diário (€2.50)</button>
+              <button class="pill-btn" onclick="setHabitPreset('Almoço fora / Takeaway', 12, 'dia', this)">🍱 Almoço Fora (€12)</button>
+              <button class="pill-btn" onclick="setHabitPreset('Tabaco / Vícios', 6, 'dia', this)">🚬 Tabaco (€6/dia)</button>
+              <button class="pill-btn" onclick="setHabitPreset('Subscrições Esquecidas', 35, 'mes', this)">📱 Subscrições (€35/mês)</button>
+            </div>
+
+            <div class="control-label" style="margin-top: 14px;">
+              <span>Valor do Gasto</span>
+              <span id="txt-h-amount">€ 2.50</span>
+            </div>
+            <div class="field-box">
+              <span class="field-symbol">€</span>
+              <input type="number" id="h-amount" class="field-input" value="2.50" min="0.5" step="0.5" oninput="calcHabitos()">
+            </div>
+
+            <div class="control-label" style="margin-top: 14px;">
+              <span>Frequência</span>
+            </div>
+            <div class="pill-select">
+              <button class="pill-btn active" id="h-btn-dia" onclick="setHabitFreq('dia')">Diário (30x/mês)</button>
+              <button class="pill-btn" id="h-btn-sem" onclick="setHabitFreq('sem')">Semanal (4x/mês)</button>
+              <button class="pill-btn" id="h-btn-mes" onclick="setHabitFreq('mes')">Mensal (1x/mês)</button>
+            </div>
+          </div>
+
+          <div>
+            <div class="metric-hero">
+              <div class="caption">Impacto Mensal no Teu Bolso</div>
+              <div class="value" id="h-res-monthly">€ 75 / mês</div>
+              <div class="sub" id="h-res-annual">Ou € 900 por ano retirados da tua construção patrimonial</div>
+            </div>
+
+            <div class="habits-grid">
+              <div class="habit-card">
+                <div class="timeframe">Em 10 Anos</div>
+                <div class="worth" id="h-res-10y">€ 13.720</div>
+                <div class="delta">Investido a 8%/ano</div>
+              </div>
+              <div class="habit-card">
+                <div class="timeframe">Em 20 Anos</div>
+                <div class="worth" id="h-res-20y">€ 44.170</div>
+                <div class="delta">Investido a 8%/ano</div>
+              </div>
+              <div class="habit-card" style="border-color: rgba(242,193,78,0.4); background: linear-gradient(145deg, #132742, #0d1e34);">
+                <div class="timeframe">Em 30 Anos</div>
+                <div class="worth" id="h-res-30y" style="color:var(--accent);">€ 112.500</div>
+                <div class="delta">O custo real do hábito</div>
+              </div>
+            </div>
+
+            <div class="chart-box" style="margin-top: 18px;">
+              <p style="font-size: 13px; color:var(--muted); line-height: 1.55;">
+                ⚡ <b>A Filosofia P1M:</b> Não se trata de abdicar de tudo, mas de ter consciência. Trocar hábitos automáticos sem valor por ativos geradores de riqueza é o segredo de quem atinge os 7 dígitos.
+              </p>
+            </div>
+          </div>
+        </div>
+      </section>
+
+    </div>
+  </div>
+</main>
+
+<footer>
+  <div class="container">
+    <div class="footer-row">
+      <div><strong>P1M — Programar 1 Milionário</strong><br>Conhecimento. Plano. Ação.</div>
+      <div>© 2026 P1M · Todos os direitos reservados.</div>
+    </div>
+    <div class="footer-disclaimer">
+      Disclaimer: Estas ferramentas destinam-se a fins estritamente pedagógicos e de simulação orientativa. Não representam garantias de rendimento futuro nem constituem consultoria de investimento personalizada.
+    </div>
+  </div>
+</footer>
+
+<script>
+  // Formatador monetário
+  const eur = new Intl.NumberFormat('pt-PT', { style: 'currency', currency: 'EUR', maximumFractionDigits: 0 });
+  const eurDec = new Intl.NumberFormat('pt-PT', { style: 'currency', currency: 'EUR', minimumFractionDigits: 2, maximumFractionDigits: 2 });
+
+  // Sincronização entre Slider e Inputs numéricos
+  function syncRange(inputId, val) {
+    document.getElementById(inputId).value = val;
+  }
+
+  // Mudança de Ferramenta / Aba
+  function switchTool(toolId) {
+    document.querySelectorAll('.tab-trigger').forEach(b => b.classList.remove('active'));
+    document.querySelectorAll('.tool-pane').forEach(p => p.classList.remove('active'));
+
+    const triggers = document.querySelectorAll('.tab-trigger');
+    const pane = document.getElementById(`tool-${toolId}`);
+    pane.classList.add('active');
+
+    // destacar o botão correto
+    if (toolId === 'milhao') triggers[0].classList.add('active');
+    if (toolId === 'emergencia') triggers[1].classList.add('active');
+    if (toolId === 'fire') triggers[2].classList.add('active');
+    if (toolId === 'habitos') triggers[3].classList.add('active');
+  }
+
+  // ==========================================
+  // SIMULADOR 1: Rumo ao 1 Milhão
+  // ==========================================
+  function calcMilhao() {
+    const initial = parseFloat(document.getElementById('m-initial').value) || 0;
+    const monthly = parseFloat(document.getElementById('m-monthly').value) || 0;
+    const rateAnnual = (parseFloat(document.getElementById('m-rate').value) || 8) / 100;
+    const target = 1000000;
+
+    document.getElementById('txt-m-initial').textContent = eur.format(initial);
+    document.getElementById('txt-m-monthly').textContent = eur.format(monthly);
+    document.getElementById('txt-m-rate').textContent = (rateAnnual * 100).toFixed(1) + '%';
+    document.getElementById('m-initial-range').value = initial;
+    document.getElementById('m-monthly-range').value = monthly;
+    document.getElementById('m-rate-range').value = rateAnnual * 100;
+
+    const rateMonthly = Math.pow(1 + rateAnnual, 1/12) - 1;
+
+    let balance = initial;
+    let months = 0;
+    let totalInvested = initial;
+
+    // Calcular horizonte mensal até 1.000.000 (limite 80 anos = 960 meses)
+    while (balance < target && months < 960) {
+      months++;
+      balance = balance * (1 + rateMonthly) + monthly;
+      totalInvested += monthly;
+    }
+
+    const years = Math.floor(months / 12);
+    const remMonths = months % 12;
+    const timeDisplay = years >= 80 ? "+80 Anos" : `${years} Anos ${remMonths > 0 ? `e ${remMonths} Meses` : ''}`;
+    
+    document.getElementById('m-res-time').textContent = timeDisplay;
+    const currentYear = new Date().getFullYear();
+    document.getElementById('m-res-date').textContent = years >= 80 ? 'Reforço muito reduzido para atingir a meta.' : `Projeção estimada de alcance até ${currentYear + years}`;
+    
+    document.getElementById('m-res-invested').textContent = eur.format(totalInvested);
+    document.getElementById('m-res-interest').textContent = eur.format(Math.max(0, balance - totalInvested));
+
+    // Gerar Gráfico de 5 Marcos temporais
+    renderMilhaoChart(initial, monthly, rateMonthly, Math.min(years, 35));
+  }
+
+  function renderMilhaoChart(initial, monthly, rateMonthly, maxYears) {
+    const container = document.getElementById('m-chart-bars');
+    container.innerHTML = '';
+    const checkpoints = [5, 10, 15, 20, 25];
+
+    let maxVal = 0;
+    const data = checkpoints.map(y => {
+      const m = y * 12;
+      let bal = initial;
+      let inv = initial;
+      for (let i = 0; i < m; i++) {
+        bal = bal * (1 + rateMonthly) + monthly;
+        inv += monthly;
+      }
+      if (bal > maxVal) maxVal = bal;
+      return { year: y, total: bal, invested: inv, interest: Math.max(0, bal - inv) };
+    });
+
+    data.forEach(d => {
+      const col = document.createElement('div');
+      col.className = 'chart-col';
+
+      const pctTotal = Math.min(100, (d.total / (maxVal || 1)) * 100);
+      const invRatio = d.invested / d.total;
+
+      const stack = document.createElement('div');
+      stack.className = 'bar-stack';
+      stack.style.height = `${pctTotal}%`;
+
+      const partInv = document.createElement('div');
+      partInv.className = 'bar-part-invested';
+      partInv.style.height = `${invRatio * 100}%`;
+      partInv.title = `Investido: ${eur.format(d.invested)}`;
+
+      const partInt = document.createElement('div');
+      partInt.className = 'bar-part-interest';
+      partInt.style.height = `${(1 - invRatio) * 100}%`;
+      partInt.title = `Juros: ${eur.format(d.interest)}`;
+
+      stack.appendChild(partInv);
+      stack.appendChild(partInt);
+
+      const label = document.createElement('div');
+      label.className = 'chart-year-label';
+      label.textContent = `${d.year}A`;
+
+      col.appendChild(stack);
+      col.appendChild(label);
+      container.appendChild(col);
+    });
+  }
+
+  // ==========================================
+  // SIMULADOR 2: Fundo de Emergência
+  // ==========================================
+  let emergencyMonths = 6;
+
+  function setEmergencyMonths(m, btn) {
+    emergencyMonths = m;
+    btn.parentElement.querySelectorAll('.pill-btn').forEach(b => b.classList.remove('active'));
+    btn.classList.add('active');
+    calcEmergencia();
+  }
+
+  function calcEmergencia() {
+    const expenses = parseFloat(document.getElementById('e-expenses').value) || 0;
+    const saved = parseFloat(document.getElementById('e-saved').value) || 0;
+    const savingMonthly = parseFloat(document.getElementById('e-saving-monthly').value) || 0;
+
+    document.getElementById('txt-e-expenses').textContent = eur.format(expenses);
+    document.getElementById('txt-e-saved').textContent = eur.format(saved);
+    document.getElementById('txt-e-saving-monthly').textContent = eur.format(savingMonthly);
+
+    const target = expenses * emergencyMonths;
+    const missing = Math.max(0, target - saved);
+    const pct = target > 0 ? Math.min(100, (saved / target) * 100) : 0;
+
+    document.getElementById('e-res-target').textContent = eur.format(target);
+    document.getElementById('e-res-missing').textContent = eur.format(missing);
+    document.getElementById('e-res-pct').textContent = `${pct.toFixed(1)}%`;
+    document.getElementById('e-bar-pct').textContent = `${pct.toFixed(0)}%`;
+    document.getElementById('e-progress-bar').style.width = `${pct}%`;
+
+    if (missing === 0) {
+      document.getElementById('e-res-months-left').textContent = '✅ Fundo Completo! Estás 100% blindado contra imprevistos.';
+      document.getElementById('e-res-months-left').style.color = 'var(--color-success)';
+    } else if (savingMonthly > 0) {
+      const monthsLeft = Math.ceil(missing / savingMonthly);
+      document.getElementById('e-res-months-left').textContent = `Faltam ${monthsLeft} meses para completar a tua proteção`;
+      document.getElementById('e-res-months-left').style.color = 'var(--muted)';
+    } else {
+      document.getElementById('e-res-months-left').textContent = 'Define uma poupança mensal para atingir a meta.';
+      document.getElementById('e-res-months-left').style.color = 'var(--muted)';
+    }
+  }
+
+  // ==========================================
+  // SIMULADOR 3: Regra dos 4% (FIRE)
+  // ==========================================
+  let firePeriod = 'm'; // 'm' or 'y'
+
+  function setFirePeriod(type) {
+    firePeriod = type;
+    document.getElementById('f-btn-m').classList.toggle('active', type === 'm');
+    document.getElementById('f-btn-y').classList.toggle('active', type === 'y');
+    document.getElementById('txt-f-mode').textContent = type === 'm' ? 'Mensal' : 'Anual';
+    calcFIRE();
+  }
+
+  function setSWR(val, btn) {
+    document.getElementById('f-swr').value = val;
+    btn.parentElement.querySelectorAll('.pill-btn').forEach(b => b.classList.remove('active'));
+    btn.classList.add('active');
+    calcFIRE();
+  }
+
+  function calcFIRE() {
+    const rawExpense = parseFloat(document.getElementById('f-expense').value) || 0;
+    const swr = (parseFloat(document.getElementById('f-swr').value) || 4.0) / 100;
+    document.getElementById('txt-f-swr').textContent = (swr * 100).toFixed(1) + '%';
+
+    const annualExpense = firePeriod === 'm' ? rawExpense * 12 : rawExpense;
+    const monthlyExpense = firePeriod === 'm' ? rawExpense : rawExpense / 12;
+
+    const fireTarget = swr > 0 ? (annualExpense / swr) : 0;
+    const mult = swr > 0 ? Math.round(1 / swr) : 0;
+
+    document.getElementById('f-res-target').textContent = eur.format(fireTarget);
+    document.getElementById('f-res-sub').textContent = `Gera ${eur.format(monthlyExpense)}/mês passivamente para sempre`;
+    document.getElementById('f-res-annual').textContent = `${eur.format(annualExpense)} / ano`;
+    document.getElementById('f-res-mult').textContent = `${mult}x Despesas Anuais`;
+  }
+
+  // ==========================================
+  // SIMULADOR 4: Custo de Oportunidade dos Hábitos
+  // ==========================================
+  let habitFreq = 'dia';
+
+  function setHabitFreq(freq) {
+    habitFreq = freq;
+    ['dia', 'sem', 'mes'].forEach(f => {
+      document.getElementById(`h-btn-${f}`).classList.toggle('active', f === freq);
+    });
+    calcHabitos();
+  }
+
+  function setHabitPreset(name, cost, freq, btn) {
+    document.getElementById('h-amount').value = cost;
+    setHabitFreq(freq);
+    btn.parentElement.querySelectorAll('.pill-btn').forEach(b => b.classList.remove('active'));
+    btn.classList.add('active');
+  }
+
+  function calcHabitos() {
+    const amount = parseFloat(document.getElementById('h-amount').value) || 0;
+    document.getElementById('txt-h-amount').textContent = eurDec.format(amount);
+
+    let monthly = 0;
+    if (habitFreq === 'dia') monthly = amount * 30;
+    if (habitFreq === 'sem') monthly = amount * 4.333;
+    if (habitFreq === 'mes') monthly = amount;
+
+    const annual = monthly * 12;
+    document.getElementById('h-res-monthly').textContent = `${eur.format(monthly)} / mês`;
+    document.getElementById('h-res-annual').textContent = `Ou ${eur.format(annual)} por ano retirados da tua construção`;
+
+    const rate = 0.08;
+    const rMonthly = Math.pow(1 + rate, 1/12) - 1;
+
+    function fv(m) {
+      let b = 0;
+      for (let i = 0; i < m; i++) {
+        b = b * (1 + rMonthly) + monthly;
+      }
+      return b;
+    }
+
+    document.getElementById('h-res-10y').textContent = eur.format(fv(10 * 12));
+    document.getElementById('h-res-20y').textContent = eur.format(fv(20 * 12));
+    document.getElementById('h-res-30y').textContent = eur.format(fv(30 * 12));
+  }
+
+  // Inicialização no arranque
+  window.addEventListener('DOMContentLoaded', () => {
+    calcMilhao();
+    calcEmergencia();
+    calcFIRE();
+    calcHabitos();
+  });
+</script>
+</body>
+</html>
