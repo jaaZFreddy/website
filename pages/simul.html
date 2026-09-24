@@ -1,1 +1,420 @@
+<!DOCTYPE html>
+<html lang="pt">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Simulador Regra 50/30/20 - Orçamento Pessoal</title>
+  <!-- Tailwind CSS via CDN -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  <!-- Inter Font -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+  
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          fontFamily: {
+            sans: ['Inter', 'sans-serif'],
+          },
+          colors: {
+            brand: {
+              needs: '#3B82F6',       // Azul vibrante
+              wants: '#F59E0B',       // Âmbar / Laranja
+              savings: '#10B981',     // Esmeralda / Verde
+            }
+          }
+        }
+      }
+    }
+  </script>
+  <style>
+    /* Transições suaves e suporte para input sem setas feias */
+    input[type=number]::-webkit-inner-spin-button, 
+    input[type=number]::-webkit-outer-spin-button { 
+      -webkit-appearance: none; 
+      margin: 0; 
+    }
+    input[type=number] {
+      -moz-appearance: textfield;
+    }
+    .custom-shadow {
+      box-shadow: 0 20px 45px -15px rgba(15, 23, 42, 0.08), 0 0 1px 1px rgba(15, 23, 42, 0.04);
+    }
+    .card-transition {
+      transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+    }
+  </style>
+</head>
+<body class="bg-slate-50 text-slate-800 antialiased min-h-screen flex items-center justify-center p-3 sm:p-6 md:p-8">
 
+  <div class="w-full max-w-4xl bg-white rounded-3xl p-5 sm:p-8 custom-shadow border border-slate-100">
+    
+    <!-- Header com Título e Seletor de Período -->
+    <header class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 pb-6 border-b border-slate-100">
+      <div>
+        <div class="inline-flex items-center gap-2 px-3 py-1 bg-blue-50 text-blue-700 text-xs font-semibold rounded-full mb-2">
+          <svg class="w-3.5 h-3.5" fill="currentColor" viewBox="0 0 20 20">
+            <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm1-12a1 1 0 10-2 0v4a1 1 0 00.293.707l2.828 2.829a1 1 0 101.415-1.415L11 9.586V6z" clip-rule="evenodd" />
+          </svg>
+          Planeamento Financeiro
+        </div>
+        <h1 class="text-2xl sm:text-3xl font-extrabold text-slate-900 tracking-tight">Simulador Regra 50/30/20</h1>
+        <p class="text-sm text-slate-500 mt-1">Organize o seu rendimento em necessidades, desejos e investimentos de forma intuitiva.</p>
+      </div>
+
+      <!-- Alternador Mensal / Anual -->
+      <div class="flex items-center bg-slate-100 p-1 rounded-xl self-stretch sm:self-auto justify-center">
+        <button id="btnMonthly" class="px-4 py-1.5 text-xs sm:text-sm font-semibold rounded-lg bg-white text-slate-900 shadow-sm transition-all" onclick="setPeriod('monthly')">
+          Mensal
+        </button>
+        <button id="btnAnnual" class="px-4 py-1.5 text-xs sm:text-sm font-semibold rounded-lg text-slate-600 hover:text-slate-900 transition-all" onclick="setPeriod('annual')">
+          Anual
+        </button>
+      </div>
+    </header>
+
+    <section class="mt-6 sm:mt-8 grid grid-cols-1 md:grid-cols-12 gap-6 items-center">
+      
+      <!-- Entrada de Salário / Rendimento -->
+      <div class="md:col-span-6 space-y-2">
+        <label for="incomeInput" class="block text-sm font-bold text-slate-700">
+          Rendimento Líquido <span id="labelPeriod" class="font-normal text-slate-500">(Mensal)</span>
+        </label>
+        
+        <div class="relative rounded-2xl shadow-sm">
+          <div class="pointer-events-none absolute inset-y-0 left-0 flex items-center pl-4">
+            <span class="text-slate-400 font-bold text-lg">€</span>
+          </div>
+          <input 
+            type="number" 
+            id="incomeInput" 
+            value="1500" 
+            step="50" 
+            min="0"
+            class="block w-full rounded-2xl border border-slate-200 py-3.5 pl-10 pr-12 text-slate-900 font-bold text-xl sm:text-2xl focus:border-blue-500 focus:outline-none focus:ring-4 focus:ring-blue-100 transition-all"
+            placeholder="1500"
+          >
+          <div class="absolute inset-y-0 right-0 flex items-center pr-3">
+            <span class="text-xs font-semibold px-2 py-1 bg-slate-100 text-slate-500 rounded-md">EUR</span>
+          </div>
+        </div>
+
+        <!-- Slider Rápido de Valor -->
+        <div class="pt-2">
+          <input 
+            type="range" 
+            id="incomeSlider" 
+            min="500" 
+            max="10000" 
+            step="50" 
+            value="1500"
+            class="w-full h-2 bg-slate-200 rounded-lg appearance-none cursor-pointer accent-blue-600"
+          >
+          <div class="flex justify-between text-[11px] text-slate-400 font-medium mt-1">
+            <span>€500</span>
+            <span>€5.000</span>
+            <span>€10.000+</span>
+          </div>
+        </div>
+      </div>
+
+      <div class="md:col-span-6 bg-slate-50 p-4 sm:p-5 rounded-2xl border border-slate-100">
+        <div class="flex justify-between items-center text-xs font-semibold text-slate-500 mb-2">
+          <span>Distribuição Percentual</span>
+          <span id="displayTotalIncome" class="font-bold text-slate-800">Total: 1.500,00 €</span>
+        </div>
+
+        <!-- Barra de Progresso Dividida -->
+        <div class="h-4 w-full bg-slate-200 rounded-full overflow-hidden flex shadow-inner">
+          <div style="width: 50%" class="bg-blue-500 h-full transition-all duration-300 relative group" title="50% Gastos Essenciais"></div>
+          <div style="width: 30%" class="bg-amber-500 h-full transition-all duration-300 relative group" title="30% Desejos e Lazer"></div>
+          <div style="width: 20%" class="bg-emerald-500 h-full transition-all duration-300 relative group" title="20% Investimentos e Poupança"></div>
+        </div>
+
+        <!-- Legenda com cores -->
+        <div class="grid grid-cols-3 gap-2 mt-3 pt-2 text-center text-xs">
+          <div class="flex items-center justify-center gap-1.5 font-medium text-slate-600">
+            <span class="w-2.5 h-2.5 rounded-full bg-blue-500 shrink-0"></span>
+            <span>50% Necessidades</span>
+          </div>
+          <div class="flex items-center justify-center gap-1.5 font-medium text-slate-600">
+            <span class="w-2.5 h-2.5 rounded-full bg-amber-500 shrink-0"></span>
+            <span>30% Desejos</span>
+          </div>
+          <div class="flex items-center justify-center gap-1.5 font-medium text-slate-600">
+            <span class="w-2.5 h-2.5 rounded-full bg-emerald-500 shrink-0"></span>
+            <span>20% Poupança</span>
+          </div>
+        </div>
+      </div>
+
+    </section>
+
+    <div class="grid grid-cols-1 md:grid-cols-3 gap-5 mt-8">
+      
+      <!-- Card 1: 50% Gastos Essenciais -->
+      <div class="card-transition bg-blue-50/40 hover:bg-blue-50/70 border border-blue-100 rounded-2xl p-5 flex flex-col justify-between">
+        <div>
+          <div class="flex items-center justify-between">
+            <div class="w-10 h-10 rounded-xl bg-blue-500 text-white flex items-center justify-center shadow-md shadow-blue-500/20">
+              <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6"/>
+              </svg>
+            </div>
+            <span class="px-2.5 py-1 text-xs font-extrabold bg-blue-100 text-blue-700 rounded-full">50%</span>
+          </div>
+
+          <h3 class="font-bold text-slate-900 text-lg mt-4">Gastos Essenciais</h3>
+          <p class="text-xs text-slate-500 mt-0.5">O que é obrigatório para viver e trabalhar.</p>
+          
+          <div class="mt-4">
+            <span id="amountNeeds" class="text-2xl sm:text-3xl font-extrabold text-blue-700 tracking-tight">750,00 €</span>
+            <span id="subNeeds" class="text-xs text-slate-400 block mt-0.5">mensais recomendados</span>
+          </div>
+        </div>
+
+        <div class="mt-6 pt-4 border-t border-blue-100/80">
+          <p class="text-[11px] font-semibold text-slate-400 uppercase tracking-wider mb-2">Exemplos Práticos</p>
+          <ul class="text-xs space-y-1.5 text-slate-600">
+            <li class="flex items-center gap-1.5">
+              <span class="text-blue-500">•</span> Renda ou Prestação da Casa
+            </li>
+            <li class="flex items-center gap-1.5">
+              <span class="text-blue-500">•</span> Supermercado e Alimentação básica
+            </li>
+            <li class="flex items-center gap-1.5">
+              <span class="text-blue-500">•</span> Água, Luz, Gás e Telecomunicações
+            </li>
+            <li class="flex items-center gap-1.5">
+              <span class="text-blue-500">•</span> Saúde, Seguros e Transportes
+            </li>
+          </ul>
+        </div>
+      </div>
+
+      <!-- Card 2: 30% Desejos e Estilo de Vida -->
+      <div class="card-transition bg-amber-50/40 hover:bg-amber-50/70 border border-amber-100 rounded-2xl p-5 flex flex-col justify-between">
+        <div>
+          <div class="flex items-center justify-between">
+            <div class="w-10 h-10 rounded-xl bg-amber-500 text-white flex items-center justify-center shadow-md shadow-amber-500/20">
+              <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14.828 14.828a4 4 0 01-5.656 0M9 10h.01M15 10h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/>
+              </svg>
+            </div>
+            <span class="px-2.5 py-1 text-xs font-extrabold bg-amber-100 text-amber-700 rounded-full">30%</span>
+          </div>
+
+          <h3 class="font-bold text-slate-900 text-lg mt-4">Desejos & Lazer</h3>
+          <p class="text-xs text-slate-500 mt-0.5">Estilo de vida, conforto e entretenimento.</p>
+          
+          <div class="mt-4">
+            <span id="amountWants" class="text-2xl sm:text-3xl font-extrabold text-amber-600 tracking-tight">450,00 €</span>
+            <span id="subWants" class="text-xs text-slate-400 block mt-0.5">mensais recomendados</span>
+          </div>
+        </div>
+
+        <div class="mt-6 pt-4 border-t border-amber-100/80">
+          <p class="text-[11px] font-semibold text-slate-400 uppercase tracking-wider mb-2">Exemplos Práticos</p>
+          <ul class="text-xs space-y-1.5 text-slate-600">
+            <li class="flex items-center gap-1.5">
+              <span class="text-amber-500">•</span> Jantares fora e Bares
+            </li>
+            <li class="flex items-center gap-1.5">
+              <span class="text-amber-500">•</span> Férias, Viagens e Escapadinhas
+            </li>
+            <li class="flex items-center gap-1.5">
+              <span class="text-amber-500">•</span> Ginásio, Hobbies e Roupa
+            </li>
+            <li class="flex items-center gap-1.5">
+              <span class="text-amber-500">•</span> Streaming (Netflix, Spotify, etc.)
+            </li>
+          </ul>
+        </div>
+      </div>
+
+      <!-- Card 3: 20% Poupança e Investimentos -->
+      <div class="card-transition bg-emerald-50/40 hover:bg-emerald-50/70 border border-emerald-100 rounded-2xl p-5 flex flex-col justify-between">
+        <div>
+          <div class="flex items-center justify-between">
+            <div class="w-10 h-10 rounded-xl bg-emerald-500 text-white flex items-center justify-center shadow-md shadow-emerald-500/20">
+              <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 7h8m0 0v8m0-8l-8 8-4-4-6 6"/>
+              </svg>
+            </div>
+            <span class="px-2.5 py-1 text-xs font-extrabold bg-emerald-100 text-emerald-700 rounded-full">20%</span>
+          </div>
+
+          <h3 class="font-bold text-slate-900 text-lg mt-4">Poupança & Investimento</h3>
+          <p class="text-xs text-slate-500 mt-0.5">Construção de património e segurança futura.</p>
+          
+          <div class="mt-4">
+            <span id="amountSavings" class="text-2xl sm:text-3xl font-extrabold text-emerald-600 tracking-tight">300,00 €</span>
+            <span id="subSavings" class="text-xs text-slate-400 block mt-0.5">mensais recomendados</span>
+          </div>
+        </div>
+
+        <div class="mt-6 pt-4 border-t border-emerald-100/80">
+          <p class="text-[11px] font-semibold text-slate-400 uppercase tracking-wider mb-2">Exemplos Práticos</p>
+          <ul class="text-xs space-y-1.5 text-slate-600">
+            <li class="flex items-center gap-1.5">
+              <span class="text-emerald-500">•</span> Fundo de Emergência (6 meses)
+            </li>
+            <li class="flex items-center gap-1.5">
+              <span class="text-emerald-500">•</span> ETFs globais e Ações
+            </li>
+            <li class="flex items-center gap-1.5">
+              <span class="text-emerald-500">•</span> PPR ou Certificados de Aforro
+            </li>
+            <li class="flex items-center gap-1.5">
+              <span class="text-emerald-500">•</span> Amortização antecipada de dívidas
+            </li>
+          </ul>
+        </div>
+      </div>
+
+    </div>
+
+    <footer class="mt-8 pt-5 border-t border-slate-100 flex flex-col sm:flex-row items-center justify-between gap-3 text-xs text-slate-400">
+      <div class="flex items-center gap-1">
+        <span>💡 Regra proposta por Elizabeth Warren em <i>All Your Worth</i>.</span>
+      </div>
+
+      <button 
+        onclick="copyEmbedCode()" 
+        id="btnCopyEmbed"
+        class="inline-flex items-center gap-1.5 px-3 py-2 bg-slate-100 hover:bg-slate-200 text-slate-700 font-semibold rounded-xl transition-all cursor-pointer"
+      >
+        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z"/>
+        </svg>
+        <span id="copyBtnText">Copiar Código de Incorporação</span>
+      </button>
+    </footer>
+
+    <!-- Notificação Flutuante de Cópia (Sem alert) -->
+    <div id="copyNotification" class="fixed bottom-6 right-6 transform translate-y-12 opacity-0 pointer-events-none transition-all duration-300 bg-slate-900 text-white px-4 py-2.5 rounded-xl shadow-2xl flex items-center gap-2 text-sm z-50">
+      <svg class="w-4 h-4 text-emerald-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" />
+      </svg>
+      <span>Código de incorporação copiado com sucesso!</span>
+    </div>
+
+  </div>
+
+  <script>
+    // Estado da aplicação
+    let currentMode = 'monthly'; // 'monthly' | 'annual'
+    const incomeInput = document.getElementById('incomeInput');
+    const incomeSlider = document.getElementById('incomeSlider');
+
+    // Formatador Monetário Português (EUR €)
+    const currencyFormatter = new Intl.NumberFormat('pt-PT', {
+      style: 'currency',
+      currency: 'EUR',
+      minimumFractionDigits: 2,
+      maximumFractionDigits: 2
+    });
+
+    // Função Principal de Cálculo e Atualização da UI
+    function calculate() {
+      let baseIncome = parseFloat(incomeInput.value) || 0;
+      if (baseIncome < 0) baseIncome = 0;
+
+      // Calcular multiplicador consoante modo
+      const multiplier = (currentMode === 'annual') ? 12 : 1;
+      const effectiveIncome = baseIncome * multiplier;
+
+      // Divisão 50 / 30 / 20
+      const needs = effectiveIncome * 0.50;
+      const wants = effectiveIncome * 0.30;
+      const savings = effectiveIncome * 0.20;
+
+      // Atualizar Valores na Interface
+      document.getElementById('amountNeeds').textContent = currencyFormatter.format(needs);
+      document.getElementById('amountWants').textContent = currencyFormatter.format(wants);
+      document.getElementById('amountSavings').textContent = currencyFormatter.format(savings);
+
+      // Atualizar Texto de Suporte (Mensais vs Anuais)
+      const periodLabel = currentMode === 'annual' ? 'anuais projetados' : 'mensais recomendados';
+      document.getElementById('subNeeds').textContent = periodLabel;
+      document.getElementById('subWants').textContent = periodLabel;
+      document.getElementById('subSavings').textContent = periodLabel;
+
+      // Resumo Superior
+      document.getElementById('displayTotalIncome').textContent = `Total: ${currencyFormatter.format(effectiveIncome)}`;
+    }
+
+    // Alternar entre visão Mensal e Anual
+    function setPeriod(mode) {
+      currentMode = mode;
+      const btnMonthly = document.getElementById('btnMonthly');
+      const btnAnnual = document.getElementById('btnAnnual');
+      const labelPeriod = document.getElementById('labelPeriod');
+
+      if (mode === 'monthly') {
+        btnMonthly.className = 'px-4 py-1.5 text-xs sm:text-sm font-semibold rounded-lg bg-white text-slate-900 shadow-sm transition-all';
+        btnAnnual.className = 'px-4 py-1.5 text-xs sm:text-sm font-semibold rounded-lg text-slate-600 hover:text-slate-900 transition-all';
+        labelPeriod.textContent = '(Mensal)';
+      } else {
+        btnAnnual.className = 'px-4 py-1.5 text-xs sm:text-sm font-semibold rounded-lg bg-white text-slate-900 shadow-sm transition-all';
+        btnMonthly.className = 'px-4 py-1.5 text-xs sm:text-sm font-semibold rounded-lg text-slate-600 hover:text-slate-900 transition-all';
+        labelPeriod.textContent = '(Base Mensal × 12 Meses)';
+      }
+
+      calculate();
+    }
+
+    // Sincronizar input numérico com o Slider
+    incomeInput.addEventListener('input', (e) => {
+      const val = parseFloat(e.target.value) || 0;
+      incomeSlider.value = Math.min(Math.max(val, 500), 10000);
+      calculate();
+    });
+
+    incomeSlider.addEventListener('input', (e) => {
+      incomeInput.value = e.target.value;
+      calculate();
+    });
+
+    // Copiar código de incorporação usando fallback execCommand para iFrames
+    function copyEmbedCode() {
+      const iframeSnippet = `<!-- Widget Simulador 50/30/20 -->\n<iframe src="${window.location.href}" width="100%" height="720" style="border:none; border-radius: 16px; overflow:hidden;" title="Simulador Regra 50/30/20"></iframe>`;
+      
+      const tempTextArea = document.createElement("textarea");
+      tempTextArea.value = iframeSnippet;
+      tempTextArea.style.position = "fixed";
+      tempTextArea.style.opacity = "0";
+      document.body.appendChild(tempTextArea);
+      tempTextArea.select();
+      
+      try {
+        document.execCommand('copy');
+        showToast();
+      } catch (err) {
+        console.error('Falha ao copiar:', err);
+      } finally {
+        document.body.removeChild(tempTextArea);
+      }
+    }
+
+    // Exibir notificação sem utilizar alert()
+    function showToast() {
+      const toast = document.getElementById('copyNotification');
+      toast.classList.remove('translate-y-12', 'opacity-0', 'pointer-events-none');
+      toast.classList.add('translate-y-0', 'opacity-100');
+
+      setTimeout(() => {
+        toast.classList.add('translate-y-12', 'opacity-0', 'pointer-events-none');
+        toast.classList.remove('translate-y-0', 'opacity-100');
+      }, 3000);
+    }
+
+    // Inicialização ao carregar
+    window.addEventListener('DOMContentLoaded', () => {
+      calculate();
+    });
+  </script>
+</body>
+</html>
