@@ -75,7 +75,28 @@
       </div>
     </header>
 
-    <section class="mt-6 sm:mt-8 grid grid-cols-1 md:grid-cols-12 gap-6 items-center">
+    <!-- Barra de Atalhos / Presets de Distribuição -->
+    <div class="mt-6 flex flex-wrap items-center justify-between gap-3 p-3.5 bg-slate-50 border border-slate-200/70 rounded-2xl">
+      <div class="flex items-center gap-2">
+        <span class="text-xs font-bold text-slate-600 uppercase tracking-wider">Estratégias Rápidas:</span>
+      </div>
+      <div class="flex flex-wrap items-center gap-1.5">
+        <button onclick="applyPreset(50, 30, 20)" class="preset-btn px-3 py-1 text-xs font-semibold rounded-lg bg-white text-slate-700 border border-slate-200 hover:border-blue-500 hover:text-blue-600 transition-all">
+          50 / 30 / 20 (Clássico)
+        </button>
+        <button onclick="applyPreset(60, 20, 20)" class="preset-btn px-3 py-1 text-xs font-semibold rounded-lg bg-white text-slate-700 border border-slate-200 hover:border-blue-500 hover:text-blue-600 transition-all">
+          60 / 20 / 20 (Realista)
+        </button>
+        <button onclick="applyPreset(70, 20, 10)" class="preset-btn px-3 py-1 text-xs font-semibold rounded-lg bg-white text-slate-700 border border-slate-200 hover:border-blue-500 hover:text-blue-600 transition-all">
+          70 / 20 / 10 (Essencial)
+        </button>
+        <button onclick="applyPreset(50, 15, 35)" class="preset-btn px-3 py-1 text-xs font-semibold rounded-lg bg-white text-slate-700 border border-slate-200 hover:border-blue-500 hover:text-blue-600 transition-all">
+          50 / 15 / 35 (Poupança Forte)
+        </button>
+      </div>
+    </div>
+
+    <section class="mt-6 grid grid-cols-1 md:grid-cols-12 gap-6 items-center">
       
       <!-- Entrada de Salário / Rendimento -->
       <div class="md:col-span-6 space-y-2">
@@ -121,32 +142,41 @@
       </div>
 
       <div class="md:col-span-6 bg-slate-50 p-4 sm:p-5 rounded-2xl border border-slate-100">
-        <div class="flex justify-between items-center text-xs font-semibold text-slate-500 mb-2">
-          <span>Distribuição Percentual</span>
-          <span id="displayTotalIncome" class="font-bold text-slate-800">Total: 1.500,00 €</span>
+        <div class="flex justify-between items-center text-xs font-semibold mb-2">
+          <span class="text-slate-500">Distribuição Dinâmica</span>
+          <div class="flex items-center gap-2">
+            <span id="badgeTotalPct" class="px-2 py-0.5 rounded-full text-[11px] font-bold bg-emerald-100 text-emerald-700">Total: 100%</span>
+            <span id="displayTotalIncome" class="font-bold text-slate-800">Total: 1.500,00 €</span>
+          </div>
         </div>
 
-        <!-- Barra de Progresso Dividida -->
+        <!-- Barra de Progresso Dividida Dinâmica -->
         <div class="h-4 w-full bg-slate-200 rounded-full overflow-hidden flex shadow-inner">
-          <div style="width: 50%" class="bg-blue-500 h-full transition-all duration-300 relative group" title="50% Gastos Essenciais"></div>
-          <div style="width: 30%" class="bg-amber-500 h-full transition-all duration-300 relative group" title="30% Desejos e Lazer"></div>
-          <div style="width: 20%" class="bg-emerald-500 h-full transition-all duration-300 relative group" title="20% Investimentos e Poupança"></div>
+          <div id="barNeeds" style="width: 50%" class="bg-blue-500 h-full transition-all duration-300 relative group" title="Gastos Essenciais"></div>
+          <div id="barWants" style="width: 30%" class="bg-amber-500 h-full transition-all duration-300 relative group" title="Desejos e Lazer"></div>
+          <div id="barSavings" style="width: 20%" class="bg-emerald-500 h-full transition-all duration-300 relative group" title="Poupança e Investimento"></div>
         </div>
 
-        <!-- Legenda com cores -->
+        <!-- Legenda com percentagens em tempo real -->
         <div class="grid grid-cols-3 gap-2 mt-3 pt-2 text-center text-xs">
           <div class="flex items-center justify-center gap-1.5 font-medium text-slate-600">
             <span class="w-2.5 h-2.5 rounded-full bg-blue-500 shrink-0"></span>
-            <span>50% Necessidades</span>
+            <span id="legendNeeds">50% Gastos</span>
           </div>
           <div class="flex items-center justify-center gap-1.5 font-medium text-slate-600">
             <span class="w-2.5 h-2.5 rounded-full bg-amber-500 shrink-0"></span>
-            <span>30% Desejos</span>
+            <span id="legendWants">30% Desejos</span>
           </div>
           <div class="flex items-center justify-center gap-1.5 font-medium text-slate-600">
             <span class="w-2.5 h-2.5 rounded-full bg-emerald-500 shrink-0"></span>
-            <span>20% Poupança</span>
+            <span id="legendSavings">20% Poupança</span>
           </div>
+        </div>
+
+        <!-- Alerta se o total for diferente de 100% -->
+        <div id="alertWarningTotal" class="hidden mt-3 p-2 bg-amber-50 border border-amber-200 rounded-xl flex items-center justify-between text-xs text-amber-800">
+          <span>⚠️ O total das percentagens não é 100%.</span>
+          <button onclick="balanceTo100()" class="underline font-bold hover:text-amber-950">Ajustar a 100%</button>
         </div>
       </div>
 
@@ -154,7 +184,7 @@
 
     <div class="grid grid-cols-1 md:grid-cols-3 gap-5 mt-8">
       
-      <!-- Card 1: 50% Gastos Essenciais -->
+      <!-- Card 1: Gastos Essenciais (Customizável) -->
       <div class="card-transition bg-blue-50/40 hover:bg-blue-50/70 border border-blue-100 rounded-2xl p-5 flex flex-col justify-between">
         <div>
           <div class="flex items-center justify-between">
@@ -163,11 +193,35 @@
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6"/>
               </svg>
             </div>
-            <span class="px-2.5 py-1 text-xs font-extrabold bg-blue-100 text-blue-700 rounded-full">50%</span>
+            
+            <!-- Controle de Percentagem -->
+            <div class="flex items-center gap-1 bg-white border border-blue-200 px-2 py-1 rounded-xl shadow-xs">
+              <input 
+                type="number" 
+                id="inputPctNeeds" 
+                value="50" 
+                min="0" 
+                max="100" 
+                class="w-10 text-right font-black text-sm text-blue-700 bg-transparent focus:outline-none"
+              >
+              <span class="text-xs font-bold text-blue-600">%</span>
+            </div>
           </div>
 
-          <h3 class="font-bold text-slate-900 text-lg mt-4">Gastos Essenciais</h3>
-          <p class="text-xs text-slate-500 mt-0.5">O que é obrigatório para viver e trabalhar.</p>
+          <h3 class="font-bold text-slate-900 text-lg mt-3">Gastos Essenciais</h3>
+          <p class="text-xs text-slate-500 mt-0.5">Obrigatório para viver e trabalhar.</p>
+
+          <!-- Slider individual da percentagem -->
+          <div class="mt-3">
+            <input 
+              type="range" 
+              id="sliderPctNeeds" 
+              min="0" 
+              max="100" 
+              value="50" 
+              class="w-full h-1.5 bg-blue-200 rounded-lg appearance-none cursor-pointer accent-blue-600"
+            >
+          </div>
           
           <div class="mt-4">
             <span id="amountNeeds" class="text-2xl sm:text-3xl font-extrabold text-blue-700 tracking-tight">750,00 €</span>
@@ -194,7 +248,7 @@
         </div>
       </div>
 
-      <!-- Card 2: 30% Desejos e Estilo de Vida -->
+      <!-- Card 2: Desejos & Lazer (Customizável) -->
       <div class="card-transition bg-amber-50/40 hover:bg-amber-50/70 border border-amber-100 rounded-2xl p-5 flex flex-col justify-between">
         <div>
           <div class="flex items-center justify-between">
@@ -203,11 +257,35 @@
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14.828 14.828a4 4 0 01-5.656 0M9 10h.01M15 10h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/>
               </svg>
             </div>
-            <span class="px-2.5 py-1 text-xs font-extrabold bg-amber-100 text-amber-700 rounded-full">30%</span>
+
+            <!-- Controle de Percentagem -->
+            <div class="flex items-center gap-1 bg-white border border-amber-200 px-2 py-1 rounded-xl shadow-xs">
+              <input 
+                type="number" 
+                id="inputPctWants" 
+                value="30" 
+                min="0" 
+                max="100" 
+                class="w-10 text-right font-black text-sm text-amber-600 bg-transparent focus:outline-none"
+              >
+              <span class="text-xs font-bold text-amber-600">%</span>
+            </div>
           </div>
 
-          <h3 class="font-bold text-slate-900 text-lg mt-4">Desejos & Lazer</h3>
+          <h3 class="font-bold text-slate-900 text-lg mt-3">Desejos & Lazer</h3>
           <p class="text-xs text-slate-500 mt-0.5">Estilo de vida, conforto e entretenimento.</p>
+
+          <!-- Slider individual da percentagem -->
+          <div class="mt-3">
+            <input 
+              type="range" 
+              id="sliderPctWants" 
+              min="0" 
+              max="100" 
+              value="30" 
+              class="w-full h-1.5 bg-amber-200 rounded-lg appearance-none cursor-pointer accent-amber-600"
+            >
+          </div>
           
           <div class="mt-4">
             <span id="amountWants" class="text-2xl sm:text-3xl font-extrabold text-amber-600 tracking-tight">450,00 €</span>
@@ -234,7 +312,7 @@
         </div>
       </div>
 
-      <!-- Card 3: 20% Poupança e Investimentos -->
+      <!-- Card 3: Poupança & Investimento (Customizável) -->
       <div class="card-transition bg-emerald-50/40 hover:bg-emerald-50/70 border border-emerald-100 rounded-2xl p-5 flex flex-col justify-between">
         <div>
           <div class="flex items-center justify-between">
@@ -243,11 +321,35 @@
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 7h8m0 0v8m0-8l-8 8-4-4-6 6"/>
               </svg>
             </div>
-            <span class="px-2.5 py-1 text-xs font-extrabold bg-emerald-100 text-emerald-700 rounded-full">20%</span>
+
+            <!-- Controle de Percentagem -->
+            <div class="flex items-center gap-1 bg-white border border-emerald-200 px-2 py-1 rounded-xl shadow-xs">
+              <input 
+                type="number" 
+                id="inputPctSavings" 
+                value="20" 
+                min="0" 
+                max="100" 
+                class="w-10 text-right font-black text-sm text-emerald-600 bg-transparent focus:outline-none"
+              >
+              <span class="text-xs font-bold text-emerald-600">%</span>
+            </div>
           </div>
 
-          <h3 class="font-bold text-slate-900 text-lg mt-4">Poupança & Investimento</h3>
-          <p class="text-xs text-slate-500 mt-0.5">Construção de património e segurança futura.</p>
+          <h3 class="font-bold text-slate-900 text-lg mt-3">Poupança & Investimento</h3>
+          <p class="text-xs text-slate-500 mt-0.5">Construção de património e segurança.</p>
+
+          <!-- Slider individual da percentagem -->
+          <div class="mt-3">
+            <input 
+              type="range" 
+              id="sliderPctSavings" 
+              min="0" 
+              max="100" 
+              value="20" 
+              class="w-full h-1.5 bg-emerald-200 rounded-lg appearance-none cursor-pointer accent-emerald-600"
+            >
+          </div>
           
           <div class="mt-4">
             <span id="amountSavings" class="text-2xl sm:text-3xl font-extrabold text-emerald-600 tracking-tight">300,00 €</span>
@@ -281,16 +383,7 @@
         <span>💡 Regra proposta por Elizabeth Warren em <i>All Your Worth</i>.</span>
       </div>
 
-      <button 
-        onclick="copyEmbedCode()" 
-        id="btnCopyEmbed"
-        class="inline-flex items-center gap-1.5 px-3 py-2 bg-slate-100 hover:bg-slate-200 text-slate-700 font-semibold rounded-xl transition-all cursor-pointer"
-      >
-        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z"/>
-        </svg>
-        <span id="copyBtnText">Copiar Código de Incorporação</span>
-      </button>
+      
     </footer>
 
     <!-- Notificação Flutuante de Cópia (Sem alert) -->
@@ -306,8 +399,30 @@
   <script>
     // Estado da aplicação
     let currentMode = 'monthly'; // 'monthly' | 'annual'
+    let pctNeeds = 50;
+    let pctWants = 30;
+    let pctSavings = 20;
+
     const incomeInput = document.getElementById('incomeInput');
     const incomeSlider = document.getElementById('incomeSlider');
+
+    // Elementos de percentagem
+    const inputPctNeeds = document.getElementById('inputPctNeeds');
+    const sliderPctNeeds = document.getElementById('sliderPctNeeds');
+    const inputPctWants = document.getElementById('inputPctWants');
+    const sliderPctWants = document.getElementById('sliderPctWants');
+    const inputPctSavings = document.getElementById('inputPctSavings');
+    const sliderPctSavings = document.getElementById('sliderPctSavings');
+
+    // Barras e legendas
+    const barNeeds = document.getElementById('barNeeds');
+    const barWants = document.getElementById('barWants');
+    const barSavings = document.getElementById('barSavings');
+    const legendNeeds = document.getElementById('legendNeeds');
+    const legendWants = document.getElementById('legendWants');
+    const legendSavings = document.getElementById('legendSavings');
+    const badgeTotalPct = document.getElementById('badgeTotalPct');
+    const alertWarningTotal = document.getElementById('alertWarningTotal');
 
     // Formatador Monetário Português (EUR €)
     const currencyFormatter = new Intl.NumberFormat('pt-PT', {
@@ -326,10 +441,10 @@
       const multiplier = (currentMode === 'annual') ? 12 : 1;
       const effectiveIncome = baseIncome * multiplier;
 
-      // Divisão 50 / 30 / 20
-      const needs = effectiveIncome * 0.50;
-      const wants = effectiveIncome * 0.30;
-      const savings = effectiveIncome * 0.20;
+      // Cálculo com base nas percentagens personalizadas
+      const needs = effectiveIncome * (pctNeeds / 100);
+      const wants = effectiveIncome * (pctWants / 100);
+      const savings = effectiveIncome * (pctSavings / 100);
 
       // Atualizar Valores na Interface
       document.getElementById('amountNeeds').textContent = currencyFormatter.format(needs);
@@ -344,7 +459,104 @@
 
       // Resumo Superior
       document.getElementById('displayTotalIncome').textContent = `Total: ${currencyFormatter.format(effectiveIncome)}`;
+
+      // Atualizar barra de progresso e legendas
+      updateDistributionBar();
     }
+
+    function updateDistributionBar() {
+      const totalPct = pctNeeds + pctWants + pctSavings;
+      
+      // Ajustar largura proporcional se total > 0
+      const sum = totalPct === 0 ? 1 : totalPct;
+      barNeeds.style.width = ((pctNeeds / sum) * 100) + '%';
+      barWants.style.width = ((pctWants / sum) * 100) + '%';
+      barSavings.style.width = ((pctSavings / sum) * 100) + '%';
+
+      // Atualizar legendas
+      legendNeeds.textContent = `${pctNeeds}% Gastos`;
+      legendWants.textContent = `${pctWants}% Desejos`;
+      legendSavings.textContent = `${pctSavings}% Poupança`;
+
+      // Atualizar indicador de total e alerta
+      badgeTotalPct.textContent = `Total: ${totalPct}%`;
+      if (totalPct === 100) {
+        badgeTotalPct.className = 'px-2 py-0.5 rounded-full text-[11px] font-bold bg-emerald-100 text-emerald-700';
+        alertWarningTotal.classList.add('hidden');
+      } else {
+        badgeTotalPct.className = 'px-2 py-0.5 rounded-full text-[11px] font-bold bg-amber-100 text-amber-700';
+        alertWarningTotal.classList.remove('hidden');
+      }
+    }
+
+    function syncPercentageControls() {
+      inputPctNeeds.value = pctNeeds;
+      sliderPctNeeds.value = pctNeeds;
+
+      inputPctWants.value = pctWants;
+      sliderPctWants.value = pctWants;
+
+      inputPctSavings.value = pctSavings;
+      sliderPctSavings.value = pctSavings;
+    }
+
+    function applyPreset(n, w, s) {
+      pctNeeds = n;
+      pctWants = w;
+      pctSavings = s;
+      syncPercentageControls();
+      calculate();
+    }
+
+    function balanceTo100() {
+      // Ajusta proporcionalmente para somar 100%
+      const total = pctNeeds + pctWants + pctSavings;
+      if (total === 0) {
+        applyPreset(50, 30, 20);
+        return;
+      }
+      pctNeeds = Math.round((pctNeeds / total) * 100);
+      pctWants = Math.round((pctWants / total) * 100);
+      pctSavings = 100 - pctNeeds - pctWants;
+      syncPercentageControls();
+      calculate();
+    }
+
+    // Ouvintes para Gastos Necessários
+    inputPctNeeds.addEventListener('input', (e) => {
+      pctNeeds = Math.max(0, Math.min(100, parseInt(e.target.value) || 0));
+      sliderPctNeeds.value = pctNeeds;
+      calculate();
+    });
+    sliderPctNeeds.addEventListener('input', (e) => {
+      pctNeeds = parseInt(e.target.value) || 0;
+      inputPctNeeds.value = pctNeeds;
+      calculate();
+    });
+
+    // Ouvintes para Desejos
+    inputPctWants.addEventListener('input', (e) => {
+      pctWants = Math.max(0, Math.min(100, parseInt(e.target.value) || 0));
+      sliderPctWants.value = pctWants;
+      calculate();
+    });
+    sliderPctWants.addEventListener('input', (e) => {
+      pctWants = parseInt(e.target.value) || 0;
+      inputPctWants.value = pctWants;
+      calculate();
+    });
+
+    // Ouvintes para Poupança
+    inputPctSavings.addEventListener('input', (e) => {
+      pctSavings = Math.max(0, Math.min(100, parseInt(e.target.value) || 0));
+      sliderPctSavings.value = pctSavings;
+      calculate();
+    });
+    sliderPctSavings.addEventListener('input', (e) => {
+      pctSavings = parseInt(e.target.value) || 0;
+      inputPctSavings.value = pctSavings;
+      calculate();
+    });
 
     // Alternar entre visão Mensal e Anual
     function setPeriod(mode) {
@@ -366,7 +578,7 @@
       calculate();
     }
 
-    // Sincronizar input numérico com o Slider
+    // Sincronizar input numérico com o Slider de rendimento
     incomeInput.addEventListener('input', (e) => {
       const val = parseFloat(e.target.value) || 0;
       incomeSlider.value = Math.min(Math.max(val, 500), 10000);
@@ -380,7 +592,7 @@
 
     // Copiar código de incorporação usando fallback execCommand para iFrames
     function copyEmbedCode() {
-      const iframeSnippet = `<!-- Widget Simulador 50/30/20 -->\n<iframe src="${window.location.href}" width="100%" height="720" style="border:none; border-radius: 16px; overflow:hidden;" title="Simulador Regra 50/30/20"></iframe>`;
+      const iframeSnippet = `<!-- Widget Simulador 50/30/20 -->\n<iframe src="${window.location.href}" width="100%" height="760" style="border:none; border-radius: 16px; overflow:hidden;" title="Simulador Regra de Orçamento"></iframe>`;
       
       const tempTextArea = document.createElement("textarea");
       tempTextArea.value = iframeSnippet;
@@ -413,6 +625,7 @@
 
     // Inicialização ao carregar
     window.addEventListener('DOMContentLoaded', () => {
+      syncPercentageControls();
       calculate();
     });
   </script>
