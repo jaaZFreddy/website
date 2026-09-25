@@ -55,7 +55,45 @@
     footer{border-top:1px solid var(--line);padding:38px 0;color:var(--muted);font-size:13px}
     .footer-row{display:flex;justify-content:space-between;gap:20px;flex-wrap:wrap}
     .disclaimer{margin-top:18px;max-width:900px}
-    @media(max-width:900px){.grid-4{grid-template-columns:repeat(2,1fr)}.grid-3{grid-template-columns:1fr 1fr}.method{grid-template-columns:repeat(3,1fr)}nav ul{display:none}.menu{display:block}}
+    @media(max-width:900px){
+      .grid-4{grid-template-columns:repeat(2,1fr)}
+      .grid-3{grid-template-columns:1fr 1fr}
+      .method{grid-template-columns:repeat(3,1fr)}
+
+      nav ul{
+        display:none;
+        position:absolute;
+        top:76px;
+        left:0;
+        right:0;
+        flex-direction:column;
+        gap:0;
+        padding:10px 4%;
+        background:rgba(7,17,31,.98);
+        border-bottom:1px solid var(--line);
+        box-shadow:0 12px 25px rgba(0,0,0,.25);
+      }
+
+      nav ul.open{display:flex}
+
+      nav ul li{width:100%}
+
+      nav ul li a{
+        display:block;
+        padding:14px 0;
+        border-bottom:1px solid var(--line);
+        font-size:16px;
+      }
+
+      nav ul li:last-child a{border-bottom:0}
+
+      .menu{
+        display:block;
+        cursor:pointer;
+        padding:8px;
+        line-height:1;
+      }
+    }
     @media(max-width:620px){.grid-4,.grid-3{grid-template-columns:1fr}.method{grid-template-columns:1fr 1fr}h1{letter-spacing:-2px}.hero{padding-top:75px}.cta{padding:34px 24px}}
   </style>
 </head>
@@ -72,7 +110,7 @@
       <li><a href="/pages/ferram.html">Ferramentas</a></li>
     </ul></nav>
     <a class="btn btn-primary" href="#comecar">Começar</a>
-    <button class="menu" aria-label="Abrir menu">☰</button>
+    <button class="menu" id="menuToggle" type="button" aria-label="Abrir menu" aria-expanded="false">☰</button>
   </div>
 </header>
 
@@ -173,5 +211,33 @@
     <p class="disclaimer">Disclaimer: O conteúdo do P1M é de natureza educativa e informativa e não constitui aconselhamento financeiro, recomendação de investimento ou garantia de resultados. Investir envolve risco, incluindo a possibilidade de perda de capital. Cada pessoa deve avaliar a sua situação e, quando necessário, procurar aconselhamento profissional.</p>
   </div>
 </footer>
+
+<script>
+  document.addEventListener('DOMContentLoaded', function () {
+    const menuToggle = document.getElementById('menuToggle');
+    const navMenu = document.querySelector('nav ul');
+
+    if (!menuToggle || !navMenu) return;
+
+    menuToggle.addEventListener('click', function () {
+      const isOpen = navMenu.classList.toggle('open');
+
+      menuToggle.setAttribute('aria-expanded', isOpen ? 'true' : 'false');
+      menuToggle.setAttribute('aria-label', isOpen ? 'Fechar menu' : 'Abrir menu');
+      menuToggle.textContent = isOpen ? '✕' : '☰';
+    });
+
+    // Fecha o menu depois de clicar num dos links.
+    navMenu.querySelectorAll('a').forEach(function (link) {
+      link.addEventListener('click', function () {
+        navMenu.classList.remove('open');
+        menuToggle.setAttribute('aria-expanded', 'false');
+        menuToggle.setAttribute('aria-label', 'Abrir menu');
+        menuToggle.textContent = '☰';
+      });
+    });
+  });
+</script>
+
 </body>
 </html>
